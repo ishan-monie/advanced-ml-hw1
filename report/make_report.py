@@ -66,6 +66,33 @@ def shuttle_section(story):
                            "(every person left waiting costs 2). Between 1 and 5 new people arrive each period. "
                            "We solve this three ways. A lower cost is better in every graph.", BODY))
 
+    story.append(Paragraph("Assumptions", H1))
+    story.append(Paragraph("The problem leaves some details open, so these are the choices we made:", BODY))
+    assumptions = [
+        "<b>What we track.</b> The only thing that matters when deciding is how many people are waiting at the start of a period "
+        "(0 to 200). We do not track the time of day or what happened before.",
+        "<b>Costs, not rewards.</b> Everything is a cost, so we look for the <i>lowest</i> total cost. The &ldquo;value&rdquo; in the graphs is the "
+        "expected total cost, so lower is better.",
+        "<b>Order of events in a period.</b> We first decide (wait or dispatch), then pay, then the new people arrive.",
+        "<b>Dispatching.</b> The shuttle is always available. It takes up to 15 people, or everybody if fewer than 15 are waiting. "
+        "We allow dispatching with an empty station, even though it is wasteful.",
+        "<b>The waiting cost.</b> The cost of 2 per person is charged on the people <i>left</i> after the shuttle has gone "
+        "(everyone, if we wait).",
+        "<b>Full station.</b> The station holds at most 200 people. If more would arrive, the extra people are turned away "
+        "(they are lost, they do not wait). We checked that this choice does not change the answer.",
+        "<b>Arrivals.</b> Each period 1, 2, 3, 4 or 5 people arrive, each with chance 1/5, independent of the past.",
+        "<b>Discounting.</b> A cost one period later counts 0.95 as much. The cost in the first period is not discounted.",
+        "<b>The end of the 500 periods (enumeration).</b> After the last period nothing more is paid, so people still "
+        "waiting at that point cost nothing extra.",
+        "<b>The plan.</b> The best action depends only on the number of people waiting, and it is the same in every "
+        "period (this is what value iteration and policy iteration find).",
+        "<b>Stopping and ties.</b> Value iteration stops when no value changes by more than 1e-10. Policy iteration starts from "
+        "&ldquo;never dispatch&rdquo; and keeps its current action when two actions cost exactly the same.",
+    ]
+    for a in assumptions:
+        story.append(Paragraph(a, ParagraphStyle("li", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
+    story.append(Spacer(1, 6))
+
     story.append(Paragraph("(a) Enumeration, 500 periods", H1))
     story.append(Paragraph("We start at the end of the 500 periods, where nothing is left to pay, and work backwards, "
                            "keeping the cheaper of the two actions at every step. The graph shows the best expected total "
