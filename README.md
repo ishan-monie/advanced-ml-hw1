@@ -22,7 +22,7 @@ pip install numpy matplotlib
 **2. Shuttle problem** – open a terminal in the `q1_shuttle` folder:
 ```
 python run_q1.py     # solves the problem 3 ways and saves the 3 plots into figures/
-python test_q1.py    # runs the 13 edge-case / correctness checks (prints PASS or FAIL for each)
+python test_q1.py    # runs the 23 edge-case / correctness checks (prints PASS or FAIL for each)
 ```
 Or open `shuttle_walkthrough.ipynb` in Jupyter / VS Code to see the graphs one by one with a short description of each part.
 

@@ -66,10 +66,11 @@ def enumeration(costs, probs, periods=500):
 
 
 # ---------------------------------------------------------------- (b) value iteration
-def value_iteration(costs, probs, tolerance=1e-10):
+def value_iteration(costs, probs, tolerance=1e-10, start_values=None):
     """Same idea with no end date: keep re-applying the 'try both, keep the cheaper' step
-    until the values stop changing. Returns (values, best_action_for_each_state, rounds)."""
-    values = np.zeros(MAX_PEOPLE + 1)
+    until the values stop changing. Returns (values, best_action_for_each_state, rounds).
+    start_values is only for testing: the starting guess (default: every state worth 0)."""
+    values = np.zeros(MAX_PEOPLE + 1) if start_values is None else np.array(start_values, dtype=float)
     rounds = 0
     while True:
         rounds += 1
@@ -94,14 +95,17 @@ def evaluate_policy(costs, probs, policy):
     return np.linalg.solve(np.eye(n) - GAMMA * P, c)
 
 
-def policy_iteration(costs, probs, start_policy=None):
-    """Start with a guess, measure how good it is, improve it, repeat until nothing changes."""
+def policy_iteration(costs, probs, start_policy=None, history=None):
+    """Start with a guess, measure how good it is, improve it, repeat until nothing changes.
+    If a list is passed as `history`, the plan's values after each round are appended to it (for testing)."""
     n = MAX_PEOPLE + 1
     policy = np.zeros(n, dtype=int) if start_policy is None else start_policy.copy()   # default: never dispatch
     rounds = 0
     while True:
         rounds += 1
         values = evaluate_policy(costs, probs, policy)
+        if history is not None:
+            history.append(values)
         q_wait = costs[WAIT] + GAMMA * probs[WAIT] @ values
         q_dispatch = costs[DISPATCH] + GAMMA * probs[DISPATCH] @ values
         better = np.where(q_dispatch < q_wait - 1e-9, DISPATCH,
