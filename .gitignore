@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
 *.pt
+!q3_policy_gradient/cartpole_model_seed0.pt
 runs/
 q3_policy_gradient/results/

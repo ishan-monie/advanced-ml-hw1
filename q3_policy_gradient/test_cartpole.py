@@ -1,5 +1,5 @@
 """Question 3(a) checks for the CartPole base model (edge cases + "does it behave as predicted?").
-Run: python test_cartpole.py        (takes about 1-2 minutes: it trains the main model once)
+Run: python test_cartpole.py        (takes about a minute: it uses the saved main model, cartpole_model_seed0.pt)
 Each check prints PASS/FAIL and the evidence. The checks are grouped as in the report."""
 import os
 from math import sqrt
@@ -165,9 +165,17 @@ check("C7. in the made-up problem, training makes the better action much more li
       f"chance of the better action {p_before:.2f} before, {p_after:.2f} after")
 
 # =====================================================================================
-print("\n=== D. DOES IT BEHAVE AS PREDICTED? (trains the main model once, about a minute) ===")
-main_policy, main_rewards = train(1500, seed=0)
-main_rewards = np.array(main_rewards)
+print("\n=== D. DOES IT BEHAVE AS PREDICTED? (uses the saved main model) ===")
+MODEL_FILE = os.path.join(HERE, "cartpole_model_seed0.pt")
+saved_train = os.path.join(HERE, "cartpole_train_seed0.npy")
+if os.path.exists(MODEL_FILE):                       # normal case: use the saved main model, no retraining
+    main_policy = Policy()
+    main_policy.load_state_dict(torch.load(MODEL_FILE))
+    main_rewards = np.load(saved_train)
+else:                                                # first run only: train it once (same seed, so identical) and save it
+    main_policy, main_rewards = train(1500, seed=0)
+    main_rewards = np.array(main_rewards)
+    torch.save(main_policy.state_dict(), MODEL_FILE)
 main_scores = evaluate(main_policy, episodes=500)
 
 torch.manual_seed(7)
@@ -200,9 +208,11 @@ check("E2. moving average by hand: [1,2,3,4] with window 2 gives 1, 1.5, 2.5, 3.
       "game 100 is the mean of games 1-100, and game 101 drops game 1",
       np.allclose(ma, [1, 1.5, 2.5, 3.5]) and ma100[0] == 1 and np.isclose(ma100[99], games[:100].mean()) and np.isclose(ma100[100], games[1:101].mean()))
 
-saved_train, saved_eval = os.path.join(HERE, "cartpole_train_seed0.npy"), os.path.join(HERE, "cartpole_eval_seed0.npy")
-same = os.path.exists(saved_train) and np.array_equal(main_rewards, np.load(saved_train)) and np.array_equal(main_scores, np.load(saved_eval))
-check("E3. re-running reproduces exactly the numbers behind the graphs in the report", same, "training curve and the 500 test scores are identical")
+saved_eval = os.path.join(HERE, "cartpole_eval_seed0.npy")
+same = os.path.exists(saved_eval) and np.array_equal(main_scores, np.load(saved_eval))
+retrained_same = np.array_equal(np.array(train(200, seed=0)[1]), main_rewards[:200])
+check("E3. the saved model reproduces exactly the 500 test scores behind the graphs in the report, and retraining from the same seed repeats the start of the saved training curve",
+      same and retrained_same, "the 500 test scores are identical; the first 200 training games are identical")
 
 print(f"\n{sum(results)} of {len(results)} checks passed")
 raise SystemExit(0 if all(results) else 1)

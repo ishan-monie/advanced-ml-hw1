@@ -411,8 +411,8 @@ def cartpole_edge_cases_section(story):
         ("<b>E2.</b> The moving average, worked by hand: [1, 2, 3, 4] with a window of 2 should give 1, 1.5, 2.5, 3.5. With a window of 100 the first value "
          "should be the first game, game 100 the mean of games 1 to 100, and game 101 should drop game 1.",
          "All of these matched.", "R9"),
-        ("<b>E3.</b> Re-running should reproduce exactly the numbers behind the graphs in this report.",
-         "The training curve and the 500 test scores were identical.", "R8"),
+        ("<b>E3.</b> The saved model should reproduce exactly the 500 test scores behind the graphs in this report, and retraining from the same seed should repeat the start of the saved training curve.",
+         "The 500 test scores were identical, and so were the first 200 training games.", "R8"),
     ])
 
 
