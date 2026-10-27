@@ -130,14 +130,13 @@ def table4(story, headers, rows, widths):
 def checks_table(story, title, rows):
     """rows: (case, what we expected, what we found, protection number)"""
     story.append(Paragraph(title, H3))
-    table4(story, ("Case", "What we expected", "What we found", "Protects"), rows, (1.9, 1.85, 1.85, 0.9))
+    table4(story, ("Test", "What we expected", "What we found", "Edge case"), rows, (1.9, 1.85, 1.85, 0.9))
 
 
 def edge_cases_section(story):
-    story.append(Paragraph("Edge cases and tests", H1))
-    story.append(Paragraph("The protections in the code come first (P1 to P17), then the tests that check them. The last column of each test table says which protection it covers. All 32 tests pass; run them with <font face='Courier'>python test_q1.py</font>.", BODY))
-
-    story.append(Paragraph("Protections in the code", H2))
+    story.append(PageBreak())
+    story.append(Paragraph("Edge cases", H1))
+    story.append(Paragraph("The unusual situations we considered, and how the code handles each one (P1 to P17).", BODY))
     story.append(Paragraph("Built into the calculation", H3))
     table4(story, ("#", "Unusual situation", "How the code handles it"), [
         ("P1", "Shuttle leaves with fewer than 15 people", "It takes everybody; the number left is never below 0 (<font face='Courier'>max(people - 15, 0)</font>)."),
@@ -167,7 +166,9 @@ def edge_cases_section(story):
     story.append(Paragraph("We did not guard against things like typing text instead of a number: that is careless typing, not part of this problem, "
                            "and the assignment fixes all the numbers.", SMALL))
 
-    story.append(Paragraph("Tests", H2))
+    story.append(PageBreak())
+    story.append(Paragraph("Tests", H1))
+    story.append(Paragraph("Checks that the solution gives the right answers, including when the problem is changed in ways where we can predict the result. All 32 pass; run them with <font face='Courier'>python test_q1.py</font>. The last column says which edge case (P1 to P17) a test covers.", BODY))
     checks_table(story, "A. Ordinary situations", [
         ("A1. Empty station (0 people)", "Wait: a shuttle would cost 100 to carry nobody.", "Best action is to wait.", "P11"),
         ("A2. Dispatching with fewer than 15 people (4)", "The shuttle takes everybody; we pay only the 100.", "Cost 100; next period has 1 to 5 people.", "P1"),
@@ -224,6 +225,8 @@ def edge_cases_section(story):
 
 
 def three_months_section(story):
+    block = []
+    story_real, story = story, block
     story.append(Paragraph("With 3 more months", H1))
     story.append(Paragraph("<b>Make the model more realistic.</b> We assumed 1 to 5 people arrive with equal chance. With real arrival data we would "
                            "check whether &ldquo;dispatch at 13&rdquo; still holds, and add rush hours, travel time, several shuttles and people who give up "
@@ -235,6 +238,7 @@ def three_months_section(story):
     story.append(Paragraph("<b>Check it a different way.</b> We would let a learning method, like the policy gradient methods in the next questions, "
                            "learn from simulated stations without being told the rules, and see whether it also finds about 13. We would also check that "
                            "the program stays fast and accurate on a much bigger station.", BODY))
+    story_real.append(KeepTogether(block))
 
 
 SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section]
