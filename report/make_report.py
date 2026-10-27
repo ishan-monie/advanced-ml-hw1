@@ -224,28 +224,17 @@ def edge_cases_section(story):
 
 
 def three_months_section(story):
-    story.append(PageBreak())
-    story.append(Paragraph("Question 2: With 3 more months, what else would we test?", TITLE))
-    story.append(Paragraph("Everything so far checks that the program solves <i>our model</i> correctly. With more time, the bigger question is "
-                           "whether the model is a good picture of a real shuttle station, and whether the answer can be trusted if things are a bit different.", BODY))
-    items = [
-        ("Use real data for arrivals.", "We assumed 1 to 5 people arrive with equal chance. With real counts we would fit the true pattern and see whether the "
-         "&ldquo;dispatch at 13&rdquo; rule still holds."),
-        ("Rush hour and quiet times.", "Arrivals change during the day. We would add the time of day to the model and see how the best rule changes."),
-        ("What if our prices are a bit wrong?", "The costs 100 and 2 are estimates. We would try, say, 50% to 150% of each and plot how the dispatch point moves, "
-         "to see how sensitive the answer is."),
-        ("Compare with simple rivals.", "Simulate &ldquo;dispatch at 10&rdquo;, &ldquo;at 15&rdquo;, &ldquo;at 20&rdquo; and &ldquo;every period&rdquo; for a long time and show "
-         "with confidence ranges that 13 really is the cheapest."),
-        ("Test on hundreds of random problems.", "Generate random shuttle sizes, prices and arrival patterns automatically, and check on each that all three methods "
-         "agree and that a brute-force search over every plan on small versions gives the same best plan."),
-        ("A more realistic shuttle.", "Travel time (the shuttle is away for a while), several shuttles, people who give up waiting, groups arriving together, "
-         "and a larger station. We would also check the program stays fast and accurate as the station gets much bigger."),
-        ("Find the answer without being told the rules.", "Let a learning method (like the policy gradient methods in the next questions) learn from simulated "
-         "stations only, and check that it also finds about 13. That would be an independent check on our model."),
-        ("Ask someone who runs a station.", "Check that our assumptions (for example, that the waiting cost is charged after the shuttle leaves) match how it really works."),
-    ]
-    for head, body in items:
-        story.append(Paragraph(f"<b>{head}</b> {body}", ParagraphStyle("li2", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=5), bulletText="•"))
+    story.append(Paragraph("With 3 more months", H1))
+    story.append(Paragraph("<b>Make the model more realistic.</b> We assumed 1 to 5 people arrive with equal chance. With real arrival data we would "
+                           "check whether &ldquo;dispatch at 13&rdquo; still holds, and add rush hours, travel time, several shuttles and people who give up "
+                           "waiting. We would also see how far the answer moves if the costs of 100 and 2 are really 50% to 150% of what we assumed, and ask "
+                           "someone who runs a station whether our assumptions (such as when the waiting cost is charged) match reality.", BODY))
+    story.append(Paragraph("<b>Test the solution harder.</b> We would generate hundreds of random shuttle problems and check that all three methods agree "
+                           "on every one, compare against a brute-force search over every plan on small versions, and simulate rival rules (&ldquo;dispatch "
+                           "at 10&rdquo;, &ldquo;at 15&rdquo;, &ldquo;at 20&rdquo;) for a long time to show with confidence ranges that 13 really is cheapest.", BODY))
+    story.append(Paragraph("<b>Check it a different way.</b> We would let a learning method, like the policy gradient methods in the next questions, "
+                           "learn from simulated stations without being told the rules, and see whether it also finds about 13. We would also check that "
+                           "the program stays fast and accurate on a much bigger station.", BODY))
 
 
 SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section]
