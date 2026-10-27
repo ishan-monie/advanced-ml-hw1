@@ -127,6 +127,10 @@ before = weights(policy)
 bad = (inputs[:5], actions[:5], np.array([1, np.nan, 0, 0, 1], dtype=np.float32))
 check("D1. a game with a NaN reward makes the update skip, and the network is left untouched",
       update(policy, opt, [bad]) is False and torch.equal(before, weights(policy)))
+nan_inputs = inputs[:5].copy()
+nan_inputs[1, 7] = np.nan
+check("D1b. a NaN inside a game's screen input makes the update skip instead of crashing, and the network is left untouched",
+      update(policy, opt, [(nan_inputs, actions[:5], rewards[:5])]) is False and torch.equal(before, weights(policy)))
 check("D2. an empty list of games, or only empty games, is skipped instead of crashing",
       update(policy, opt, []) is False
       and update(policy, opt, [(np.zeros((0, 6400), dtype=np.float32), np.zeros(0, dtype=np.float32), np.zeros(0, dtype=np.float32))]) is False)

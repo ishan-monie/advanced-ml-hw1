@@ -98,7 +98,9 @@ def update(policy, optimizer, games, gamma=GAMMA, device="cpu", reset_at_points=
     x = torch.from_numpy(np.concatenate([g[0] for g in games])).to(device)
     a = torch.from_numpy(np.concatenate([g[1] for g in games])).to(device)
     returns = torch.from_numpy(np.concatenate([discounted_returns(g[2], gamma, reset_at_points) for g in games])).to(device)
-    loss = -(policy(x).log_prob(a) * returns).sum() / len(games)   # per game, so the learning rate does not depend on the batch size
+    if not torch.isfinite(x).all():                       # checked before the network is used, so a broken input cannot crash or change anything
+        return False
+    loss =-(policy(x).log_prob(a) * returns).sum() / len(games)   # per game, so the learning rate does not depend on the batch size
     if not torch.isfinite(loss):
         return False
     optimizer.zero_grad()

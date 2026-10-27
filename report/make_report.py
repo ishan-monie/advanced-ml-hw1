@@ -470,7 +470,7 @@ def pong_edge_cases_section(story):
 
     story.append(PageBreak())
     story.append(Paragraph("Pong: Tests", H1))
-    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 28 tests passed, meaning "
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 29 tests passed, meaning "
                            "every result matched the expectation. Run them with <font face='Courier'>python test_pong.py</font>. "
                            "The last column says which edge case (S1 to S10) a test covers.", BODY))
     checks_table(story, "A. Scoring and game rules", [
@@ -498,6 +498,8 @@ def pong_edge_cases_section(story):
     ])
     checks_table(story, "D. The training loop", [
         ("<b>D1.</b> A game with a NaN reward should make the update skip, leaving the network untouched.", "It was skipped and the weights were identical.", "S6"),
+        ("<b>D1b.</b> A NaN inside a game&rsquo;s screen input should make the update skip instead of crashing, leaving the network untouched. "
+         "(Added after the same test for the baseline code found that the old code crashed here; it was fixed.)", "It was skipped and the weights were identical.", "S6"),
         ("<b>D2.</b> An empty list of games, or only empty games, should be skipped instead of crashing.", "Both were skipped.", "S6"),
         ("<b>D3.</b> If the limit ends in the middle of a batch (1 game played, batch of 4), that game should still be learned from.", "The network changed.", "S8"),
         ("<b>D4.</b> The same seed should give identical results, and a different seed different ones.", "Two runs with seed 3 matched exactly; seed 4 differed.", "S9"),
@@ -735,7 +737,60 @@ def cartpole_baseline_graphs_section(story):
                            "and the tests use the same setting.", BODY))
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section, pg_part1_three_months_section, baseline_intro_section, cartpole_baseline_graphs_section, cartpole_baseline_edge_cases_section]
+def pong_baseline_edge_cases_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("Pong baseline: Edge cases", H1))
+    story.append(Paragraph("The unusual situations we considered for the Pong baseline experiment, and how the code handles each one (V1 to V9). "
+                           "Pong uses only the learned baseline: a second network that sees the same screen-difference as the policy.", BODY))
+    table4(story, ("#", "Unusual situation", "How the code handles it"), [
+        ("V1", "A baseline that depends on the push it judges (this would bend the direction of learning)",
+         "The baseline network is used without learning information, so the policy&rsquo;s step cannot pull it around. It is trained separately."),
+        ("V2", "A NaN or infinite number in a game&rsquo;s screen input or rewards", "The update is skipped before either network is used, and neither is changed. (Writing this test found that the old code crashed instead of skipping; it was fixed, in Part 1 as well.)"),
+        ("V3", "The baseline network&rsquo;s own training producing an unusable number", "That training step is skipped, and the policy is not affected. (This protection is in the code but is not tested on its own, because an unusable input is already caught earlier; see V2.)"),
+        ("V4", "Bad settings: an unknown baseline name (the constant baseline is CartPole only), batch below 1, learning rate of 0 or below, discount of 1 or more", "Rejected at the start with a clear message."),
+        ("V5", "An empty game, or a game of only one step", "Empty games are skipped. A one-step game still gives a valid update."),
+        ("V6", "The new code accidentally changing Part 1", "&ldquo;No baseline&rdquo; subtracts a reference of exactly 0, and a test checks that one learning step gives identical weights to the Part 1 code."),
+        ("V7", "Credit leaking across points", "As in Part 1, the credit restarts at each point, and the baseline is trained to guess the same restarted credit."),
+        ("V8", "Running out of time or games in the middle of a batch", "The games already played are still learned from."),
+        ("V9", "Results that cannot be repeated", "Random seeds are fixed, and the 500 test games use their own seed."),
+    ], (0.45, 2.45, 3.6))
+
+    story.append(PageBreak())
+    story.append(Paragraph("Pong baseline: Tests", H1))
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. "
+                           "Run them with <font face='Courier'>python test_pong_baseline.py</font>. "
+                           "The last column says which edge case (V1 to V9) a test covers.", BODY))
+    checks_table(story, "A. The reference and the credits", [
+        ("<b>A1.</b> The learning step should be exactly the hand-written one: credit = (reward that followed, restarting at each point) &minus; reference, averaged over the games, with and without the learned baseline.",
+         "It was.", "V1, V7"),
+        ("<b>A2.</b> &ldquo;No baseline&rdquo; should be exactly Part 1: one learning step should give identical weights.", "The weights were identical.", "V6"),
+        ("<b>A3.</b> The learned baseline should be only a reference for the credits, with no learning information carried into the policy.",
+         "Its first use carried none; its second use (its own training) did.", "V1"),
+        ("<b>A4.</b> Bad settings (batch 0, learning rate 0, discount 1.0, an unknown baseline name) should be rejected.", "All four were rejected.", "V4"),
+    ])
+    checks_table(story, "B. A baseline should not change where learning points, only how noisy it is", [
+        ("<b>B1.</b> The learned baseline network should learn to expect about the right reward in a made-up problem (pushing down pays 10, pushing up pays 12, so about 11).",
+         "Its guess was 11.11.", "&ndash;"),
+        ("<b>B2.</b> Made-up problem with a known answer: with no baseline and with a learned baseline, our learning signal should match the exact gradient of the expected reward.",
+         "Both matched: direction match 1.0000 in each, with size errors of 0.066 (none) and 0.001 (learned).", "V1"),
+        ("<b>B2b.</b> The previous check should be able to fail: a baseline that peeks at the push&rsquo;s own reward, or subtracts twice as much, should be caught.",
+         "Both were caught (direction match 0.00 and &minus;1.00).", "V1"),
+        ("<b>B3.</b> A baseline should make the learning signal much less noisy (repeated small batches of 20 pushes).",
+         "The typical spread was 8.44 with no baseline and 3.18 with the learned baseline.", "&ndash;"),
+    ])
+    checks_table(story, "C. The training loop", [
+        ("<b>C1.</b> A NaN reward should make the update skip, leaving both networks untouched.", "It was skipped and all weights were identical.", "V2"),
+        ("<b>C1b.</b> A NaN inside a game&rsquo;s screen input should make the update skip instead of crashing, leaving both networks untouched.",
+         "It was skipped and all weights were identical (after the fix described under V2).", "V2"),
+        ("<b>C2.</b> An empty list of games, or only empty games, should be skipped instead of crashing (both settings).", "They were skipped.", "V5"),
+        ("<b>C3.</b> A one-step game should still give a valid update.", "It did, with all numbers finite.", "V5"),
+        ("<b>C4.</b> The same seed should give an identical training curve, and a different seed a different one (real games).",
+         "Same seed identical, different seed different.", "V9"),
+        ("<b>C5.</b> If the game limit ends in the middle of a batch (1 game played, batch of 4), that game should still be learned from.", "The network changed.", "V8"),
+    ])
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section, pg_part1_three_months_section, baseline_intro_section, cartpole_baseline_graphs_section, cartpole_baseline_edge_cases_section, pong_baseline_edge_cases_section]
 
 story = []
 for add in SECTIONS:
