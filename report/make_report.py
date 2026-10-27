@@ -128,9 +128,9 @@ def table4(story, headers, rows, widths):
 
 
 def checks_table(story, title, rows):
-    """rows: (case, what we expected, what we found, protection number)"""
+    """rows: (the test and what we expect, the result, the edge case it covers)"""
     story.append(Paragraph(title, H3))
-    table4(story, ("Test", "What we expected", "What we found", "Edge case"), rows, (1.9, 1.85, 1.85, 0.9))
+    table4(story, ("Test (and what we expect)", "Result (matched what we expected)", "Edge case"), rows, (3.1, 2.55, 0.85))
 
 
 def edge_cases_section(story):
@@ -168,59 +168,91 @@ def edge_cases_section(story):
 
     story.append(PageBreak())
     story.append(Paragraph("Tests", H1))
-    story.append(Paragraph("Checks that the solution gives the right answers, including when the problem is changed in ways where we can predict the result. All 32 pass; run them with <font face='Courier'>python test_q1.py</font>. The last column says which edge case (P1 to P17) a test covers.", BODY))
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 32 tests passed, meaning every result matched the expectation. Run them with <font face='Courier'>python test_q1.py</font>. The last column says which edge case (P1 to P17) a test covers.", BODY))
     checks_table(story, "A. Ordinary situations", [
-        ("A1. Empty station (0 people)", "Wait: a shuttle would cost 100 to carry nobody.", "Best action is to wait.", "P11"),
-        ("A2. Dispatching with fewer than 15 people (4)", "The shuttle takes everybody; we pay only the 100.", "Cost 100; next period has 1 to 5 people.", "P1"),
-        ("A3. Does the 200-person limit matter? Try 300.", "No change to the best actions.", "Same actions up to 150 people; costs differ by 9e-11.", "P2"),
-        ("A4. Chances of the next situation add up to 100%", "Exactly 100% in every situation.", "Largest error 0. A deliberately damaged table is caught by the same check.", "P3"),
-        ("A5. A bigger shuttle", "Wait for more people before sending it.", "Shuttle of 5 / 15 / 30 dispatches at 5 / 13 / 17 people.", "&ndash;"),
+        ("<b>A1.</b> Empty station (0 people): the best action should be to wait, because a shuttle would cost 100 to carry nobody.",
+         "The best action was to wait.", "P11"),
+        ("<b>A2.</b> Dispatching with fewer than 15 people (4): the shuttle should take everybody, and we should pay only the 100.",
+         "The cost was 100 and the next period had 1 to 5 people.", "P1"),
+        ("<b>A3.</b> Does the 200-person limit matter? With a limit of 300 the best actions should not change.",
+         "The actions were the same up to 150 people, and the costs differed by only 9e-11.", "P2"),
+        ("<b>A4.</b> The chances of the next situation should add up to 100% everywhere.",
+         "The largest error was 0, and a deliberately damaged table was caught by the same check.", "P3"),
+        ("<b>A5.</b> A bigger shuttle should wait for more people before being sent.",
+         "Shuttles of size 5, 15 and 30 dispatched at 5, 13 and 17 people.", "&ndash;"),
     ])
     checks_table(story, "B. Edges of the station", [
-        ("B1. Exactly 15 people, then 16", "15 empties the station; 16 leaves one behind.", "Costs 100 and 102.", "P1"),
-        ("B2. Full station (200)", "Dispatch, and waiting cannot push it above 200.", "Best action is to dispatch; waiting stays at 200.", "P2"),
-        ("B3. Nearly full (199 and 198)", "At 199 every arrival is turned away. At 198 only one fits.", "From 199: always 200. From 198: 20% to 199, 80% to 200.", "P2"),
-        ("B4. Off-by-one", "201 situations (0 to 200), not 200.", "All tables are 201 wide and the graphs have 201 points.", "P4"),
+        ("<b>B1.</b> Exactly 15 people should empty the station, while 16 should leave one behind.",
+         "The costs were 100 and 102.", "P1"),
+        ("<b>B2.</b> Full station (200): we should dispatch, and waiting should not push it above 200.",
+         "The best action was to dispatch, and waiting stayed at 200.", "P2"),
+        ("<b>B3.</b> Nearly full (199 and 198): at 199 every arrival should be turned away, and at 198 only one should fit.",
+         "From 199 the station always went to 200. From 198 it went to 199 with 20% chance and to 200 with 80%.", "P2"),
+        ("<b>B4.</b> Off-by-one: there should be 201 situations (0 to 200), not 200.",
+         "All tables are 201 wide and the graphs have 201 points.", "P4"),
     ])
     checks_table(story, "C. Arrivals", [
-        ("C1. Nobody ever arrives, 10 waiting (worked by hand)", "Waiting forever costs 20/(1-0.95) = 400; dispatching once costs 100. Cheapest: 100.", "The program gives 100.000.", "&ndash;"),
-        ("C2. Far more arrivals than the shuttle can carry (16 to 20 per period)",
-         "The queue never empties, so each person left costs 2/(1-0.95) = 40 forever. A dispatch (100) pays off from 100/40, so from 3 people. "
-         "(Our first guess here was 15; working it through showed the guess was wrong, not the program.)",
-         "Dispatches for every number from 3 to 152.", "&ndash;"),
-        ("C2b. Why does it stop at 152?", "Near the limit the queue hits 200 anyway, so a dispatch saves little. The point should move if the limit moves.",
-         "Last dispatch at 152 (limit 200) and 252 (limit 300): an effect of the cap.", "P2"),
+        ("<b>C1.</b> Nobody ever arrives and 10 are waiting (worked by hand): waiting forever costs 20 / (1 - 0.95) = 400 and dispatching once costs 100, "
+         "so the cheapest should be 100.",
+         "The program gave 100.000.", "&ndash;"),
+        ("<b>C2.</b> Far more arrivals than the shuttle can carry (16 to 20 per period): the queue never empties, so each person left costs "
+         "2 / (1 - 0.95) = 40 forever. A dispatch (100) should pay off from 100 / 40, so from 3 people. "
+         "(Our first guess was 15; working it through showed the guess was wrong, not the program.)",
+         "It dispatched for every number from 3 to 152.", "&ndash;"),
+        ("<b>C2b.</b> Why does it stop at 152? Near the limit the queue hits 200 anyway, so a dispatch saves little, "
+         "and the stopping point should move if the limit moves.",
+         "The last dispatch was at 152 with a limit of 200, and at 252 with a limit of 300, so it is an effect of the cap.", "P2"),
     ])
     checks_table(story, "D. Extreme prices", [
-        ("D1a. Free shuttle", "Dispatch whenever anyone is waiting.", "Dispatches in 200 of 200 situations.", "&ndash;"),
-        ("D1b. Free waiting", "Never dispatch; total cost 0.", "Never dispatches; cost 0.", "&ndash;"),
-        ("D2. Enormous shuttle cost (1,000,000)", "Never dispatch, even with a full station.", "Never dispatches.", "&ndash;"),
+        ("<b>D1a.</b> Free shuttle: we should dispatch whenever anyone is waiting.",
+         "It dispatched in all 200 situations with someone waiting.", "&ndash;"),
+        ("<b>D1b.</b> Free waiting: we should never dispatch, and the total cost should be 0.",
+         "It never dispatched, and the cost was 0.", "&ndash;"),
+        ("<b>D2.</b> Enormous shuttle cost (1,000,000): we should never dispatch, even with a full station.",
+         "It never dispatched.", "&ndash;"),
     ])
     checks_table(story, "E. Time and discounting", [
-        ("E1. Very short horizon (worked by hand)", "1 period left costs 2 x people. 2 periods left costs 3.9 x people + 5.7.", "Both match the program exactly.", "P6"),
-        ("E2. Is 500 periods long enough? Compare 100, 200 and 500.", "The answer settles down as the horizon grows.",
-         "Difference from the no-end-date answer: 4.0 / 0.024 / 0.000000003.", "P6"),
+        ("<b>E1.</b> Very short horizon (worked by hand): with 1 period left the cost should be 2 times the number of people, "
+         "and with 2 periods left 3.9 times the people plus 5.7.",
+         "Both matched the program exactly.", "P6"),
+        ("<b>E2.</b> Is 500 periods long enough? As the horizon grows from 100 to 200 to 500 periods, the answer should settle down.",
+         "The difference from the no-end-date answer was 4.0, then 0.024, then 0.000000003.", "P6"),
     ])
     checks_table(story, "F. Checks on each method", [
-        ("F1. Enumeration: the starting point", "Nothing left to pay after the last period; more periods left never costs less.", "Value after period 500 is 0 everywhere; costs only grow with more periods.", "P6"),
-        ("F2. Value iteration: different starting guesses", "Same answer from any guess.", "All 0, all 1000 and random guesses agree to 4e-9.", "P7"),
-        ("F3. Policy iteration: improving and ties", "Each round improves the plan. When all actions cost the same, it must not loop forever.", "6 rounds, costs never went up. The all-ties problem stopped after 1 round.", "P8, P9"),
+        ("<b>F1.</b> Enumeration starting point: nothing should be left to pay after the last period, and more periods left should never cost less.",
+         "The value after period 500 is 0 everywhere, and costs only grew with more periods.", "P6"),
+        ("<b>F2.</b> Value iteration should reach the same answer from different starting guesses.",
+         "Starting guesses of all 0, all 1000 and random numbers agreed to 4e-9.", "P7"),
+        ("<b>F3.</b> Policy iteration should improve the plan every round, and when all actions cost the same it should not loop forever.",
+         "It took 6 rounds and the cost never went up. A problem where every action ties stopped after 1 round.", "P8, P9"),
     ])
     checks_table(story, "G. Overall checks", [
-        ("G1. All three methods agree", "Same costs and same plan.", "Biggest gap 3e-9; identical plan.", "all"),
-        ("G2. Policy iteration from a bad start (&ldquo;always dispatch&rdquo;)", "Still finds the same best plan.", "It does.", "P8"),
-        ("G3. Simulate the station 3000 times", "The average cost matches the calculated cost.", "Simulated 575.8 (&plusmn;1.7) against calculated 576.7.", "&ndash;"),
+        ("<b>G1.</b> All three methods should agree on the costs and on the plan.",
+         "The biggest gap was 3e-9, and the plan was identical.", "all"),
+        ("<b>G2.</b> Policy iteration started from a bad plan (&ldquo;always dispatch&rdquo;) should still find the same best plan.",
+         "It did.", "P8"),
+        ("<b>G3.</b> Simulating the station 3000 times should give an average cost that matches the calculated cost.",
+         "The simulation gave 575.8 (plus or minus 1.7) against a calculated 576.7.", "&ndash;"),
     ])
     checks_table(story, "H. The safety checks themselves", [
-        ("H1. Nonsense numbers (no arrivals, negative arrivals, sizes or costs, limit 0)", "Each one is rejected with a clear message.", "6 of 6 rejected.", "P12"),
-        ("H1b. Tables of the wrong size, or whose chances do not add to 100%", "Rejected.", "Both stopped.", "P12"),
-        ("H2. Discount of 1.0, 1.5 or -0.1; and 0.0", "The first three are rejected; 0.0 is allowed.", "As expected.", "P13"),
-        ("H3. Value iteration with a target it can never meet", "Stops with an error after the maximum rounds.", "It does (50 rounds allowed).", "P14"),
-        ("H4. Policy iteration allowed only 1 round (it needs 6)", "Stops with an error.", "It does.", "P15"),
-        ("H5. Enumeration with 0, -3 or 2.5 periods", "Rejected.", "All three rejected.", "P16"),
-        ("H6. A NaN or infinite cost", "All three methods stop with an error.", "They do. (An infinite cost on an action nobody uses is, rightly, not an error.)", "P17"),
-        ("H7. Waiting with 10 people", "We pay 20; next period has 11 to 15 people.", "Cost 20; chances 20% each for 11 to 15.", "P5"),
-        ("H8. Exact equation solving vs a slow repeat-until-settled calculation", "Same costs.", "Largest gap 9e-13.", "P10"),
+        ("<b>H1.</b> Nonsense numbers (no arrivals, negative arrivals, sizes or costs, a limit of 0) should each be rejected with a clear message.",
+         "All 6 were rejected.", "P12"),
+        ("<b>H1b.</b> Tables of the wrong size, or whose chances do not add to 100%, should be rejected.",
+         "Both were stopped.", "P12"),
+        ("<b>H2.</b> A discount of 1.0, 1.5 or -0.1 should be rejected, while a discount of 0.0 should be allowed.",
+         "The first three were rejected and 0.0 was accepted.", "P13"),
+        ("<b>H3.</b> Value iteration given a target it can never meet should stop with an error after the maximum number of rounds.",
+         "It stopped with an error (50 rounds were allowed).", "P14"),
+        ("<b>H4.</b> Policy iteration allowed only 1 round (it needs 6) should stop with an error.",
+         "It stopped with an error.", "P15"),
+        ("<b>H5.</b> Enumeration with 0, -3 or 2.5 periods should be rejected.",
+         "All three were rejected.", "P16"),
+        ("<b>H6.</b> A NaN or infinite cost should make all three methods stop with an error.",
+         "All three methods stopped. (An infinite cost on an action nobody uses is rightly not an error.)", "P17"),
+        ("<b>H7.</b> Waiting with 10 people: we should pay 20, and next period should have 11 to 15 people.",
+         "The cost was 20, with a 20% chance of each of 11 to 15 people.", "P5"),
+        ("<b>H8.</b> Exact equation solving should agree with a slow repeat-until-settled calculation.",
+         "The largest gap was 9e-13.", "P10"),
     ])
 
 
