@@ -416,7 +416,41 @@ def cartpole_edge_cases_section(story):
     ])
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section]
+def pong_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("(b) Pong-v5", H1))
+    story.append(Paragraph("The same method as for CartPole, now on the Atari game Pong. The network sees the screen, outputs the chance of moving "
+                           "the paddle up, and plays whole games. These are the choices we made for part (b):", BODY))
+    assumptions = [
+        "<b>The game.</b> We play the right-hand paddle against the computer, using ALE/Pong-v5. A game ends when one side reaches 21 points. "
+        "Each point we win gives +1 and each point we lose gives &minus;1, so a game scores between &minus;21 and +21. Random play scores about &minus;20.",
+        "<b>The game is partly random.</b> In Pong-v5 each push is held for 4 screen frames, and with a 25% chance the game repeats our previous "
+        "push instead of the new one. So even identical play gives different results, and scores vary from game to game.",
+        "<b>What the network sees.</b> Each screen is cleaned with the assignment&rsquo;s <font face='Courier'>preprocess</font> function into an "
+        "80 x 80 grid of 0s and 1s (paddles and ball are 1). The network is shown the <i>difference</i> between this frame and the previous one, "
+        "so it can tell which way things are moving. The first frame of a game has no previous frame, so its difference is all zeros. "
+        "<font face='Courier'>preprocess</font> changes the picture it is given, so we always give it a copy.",
+        "<b>The network.</b> 6,400 inputs, one hidden layer of 256 units, and one output: the chance of pushing up.",
+        "<b>Actions.</b> Of the 6 actions in the game, we use only RIGHT (action 2, paddle up) and LEFT (action 3, paddle down), as the assignment says.",
+        "<b>Actions are random.</b> Both in training and in the final 500 games, each push is chosen at random using the network&rsquo;s probability.",
+        "<b>Credit for each push.</b> Discount 0.99, as the assignment says. The running total restarts at every point scored, so a push is only "
+        "credited for the point it was part of (each point is treated as its own small game). This is a common choice for Pong, but it is "
+        "our choice, not something the assignment states.",
+        "<b>Learning.</b> Adam, with the loss averaged over 4 games per update (one update per game would be very noisy for a network this big). "
+        "No baseline and no rescaling of the credits, because this is the basic version.",
+        "<b>Learning rate.</b> The assignment gives 0.01 but allows a different value if training is more stable. We trained with both 0.01 and "
+        "0.001 for the full time. Our rule, set before seeing the results: the main model is the one with the higher average over its last 100 "
+        "training games, and both are shown. A second run at 0.001 with a different random seed shows how much luck matters.",
+        "<b>Training length.</b> Pong is slow on a computer without a GPU (about one second per game), so every run gets the same fixed "
+        "4 hours of training time instead of a fixed number of games.",
+        "<b>Final test.</b> After training the network stops learning. We play 500 new games, with a different random seed, and plot the scores.",
+        "<b>Bad numbers.</b> An update that would produce NaN or infinity is skipped, and skipped updates are counted in the saved settings.",
+    ]
+    for a in assumptions:
+        story.append(Paragraph(a, ParagraphStyle("li4", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section]
 
 story = []
 for add in SECTIONS:
