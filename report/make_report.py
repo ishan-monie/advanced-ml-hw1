@@ -43,7 +43,7 @@ def summary_section(story):
     story.append(Preformatted("pip install numpy matplotlib", CODE))
     story.append(Paragraph("<b>Step 2.</b> Shuttle problem. Open a terminal in the <font face='Courier'>q1_shuttle</font> folder and run:", BODY))
     story.append(Preformatted("python run_q1.py     # solves the problem 3 ways and saves the 3 plots in figures/\n"
-                              "python test_q1.py    # runs the 23 edge-case and correctness checks (PASS/FAIL for each)", CODE))
+                              "python test_q1.py    # runs the 32 edge-case and correctness checks (PASS/FAIL for each)", CODE))
     story.append(Paragraph("The README in the repository repeats these instructions and explains what each file does. "
                            "Instructions for the policy gradient questions will be added to the same README.", BODY))
 
@@ -118,68 +118,142 @@ SMALLB = ParagraphStyle("smallb", parent=SMALL, fontName="Helvetica-Bold")
 H2 = ParagraphStyle("h2", parent=ss["Heading2"], fontSize=12, spaceBefore=10, spaceAfter=5, keepWithNext=1)
 
 
-def checks_table(story, title, rows):
-    """rows: (check, what we expected, what we found)"""
-    story.append(Paragraph(title, H2))
-    data = [[Paragraph(h, SMALLB) for h in ("Case", "What we expected", "What we found")]]
-    data += [[Paragraph(c, SMALL) for c in r] for r in rows]
-    t = Table(data, colWidths=[2.15 * inch, 2.15 * inch, 2.2 * inch], repeatRows=1)
+def table4(story, headers, rows, widths):
+    data = [[Paragraph(h, SMALLB) for h in headers]] + [[Paragraph(c, SMALL) for c in r] for r in rows]
+    t = Table(data, colWidths=[w * inch for w in widths], repeatRows=1)
     t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), .4, colors.grey), ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2f7")),
                            ("VALIGN", (0, 0), (-1, -1), "TOP"), ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
     story.append(t)
 
 
+def checks_table(story, title, rows):
+    """rows: (case, what we expected, what we found, protection number)"""
+    story.append(Paragraph(title, H2))
+    table4(story, ("Case", "What we expected", "What we found", "Protects"), rows, (1.9, 1.85, 1.85, 0.9))
+
+
 def edge_cases_section(story):
     story.append(PageBreak())
     story.append(Paragraph("Question 2: Edge cases and tests", TITLE))
-    story.append(Paragraph("To check the solution we looked at unusual situations (edge cases) and at changes to the problem where we can "
-                           "predict the answer in advance. All 23 checks pass. They are run with <font face='Courier'>python test_q1.py</font> "
-                           "and are grouped below. The check numbers match the ones printed by the program.", BODY))
+    story.append(Paragraph("An <b>edge case</b> is an unusual situation that could break a solution, such as an empty station or a full one. "
+                           "We handled these in two ways, and this section lists both:", BODY))
+    story.append(Paragraph("&bull; <b>Part 1 &ndash; Protections:</b> what the code itself does so that unusual situations cannot cause wrong answers (P1 to P17).", BODY))
+    story.append(Paragraph("&bull; <b>Part 2 &ndash; Tests:</b> checks that try the unusual situations, and changes to the problem where we can predict the "
+                           "answer, to prove the protections work. The last column says which protection each test covers. "
+                           "All 32 tests pass. Run them with <font face='Courier'>python test_q1.py</font>.", BODY))
+
+    story.append(Paragraph("Part 1: Protections in the code", H1))
+    story.append(Paragraph("Built into the calculation", H2))
+    table4(story, ("#", "Unusual situation", "How the code handles it"), [
+        ("P1", "Shuttle leaves with fewer than 15 people", "It takes everybody; the number left is never below 0 (<font face='Courier'>max(people - 15, 0)</font>)."),
+        ("P2", "Arrivals would push the station past 200", "The station stops at 200 and the extra people are turned away (<font face='Courier'>min(..., 200)</font>)."),
+        ("P3", "Chances of the next situation not adding up to 100%", "Each possible arrival number gets exactly 1 / (number of options), so they always add up to 100%."),
+        ("P4", "Off-by-one: 0 to 200 is 201 situations, not 200", "Every table is sized 200 + 1."),
+        ("P5", "Waiting should not remove anybody", "When we wait, everyone stays; we pay 2 for each."),
+        ("P6", "Enumeration needs a starting point", "After the last period the value is 0, then it works backwards from period 499 to 0."),
+        ("P7", "Value iteration stopping too early or never", "It stops only when no value changes by more than 1e-10, not after a fixed number of rounds."),
+        ("P8", "Policy iteration looping on ties or rounding noise", "It only changes an action if the new one is better by more than 1e-9; otherwise it keeps the current action."),
+        ("P9", "Value iteration flip-flopping on exact ties", "Dispatch is chosen only if it is strictly cheaper; a tie means wait."),
+        ("P10", "Inaccurate evaluation of a plan", "Policy iteration solves the exact equations instead of approximating."),
+        ("P11", "Dispatching an empty station", "Allowed, with no special rule. It is just never the best action."),
+    ], (0.45, 2.5, 3.6))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph("Safety checks added to stop bad inputs and runaway calculations", H2))
+    table4(story, ("#", "Unusual situation", "How the code handles it"), [
+        ("P12", "Nonsense numbers: no arrivals, negative arrivals, sizes or costs, a station limit of 0, tables that do not match the problem",
+         "It stops at the start with a clear message saying what is wrong."),
+        ("P13", "A discount of 1 or more (or below 0)", "Rejected. With a discount of 1 the &ldquo;forever&rdquo; problem has no finite answer."),
+        ("P14", "Value iteration never settles", "A maximum number of rounds; if it is exceeded the program stops with an error instead of running forever."),
+        ("P15", "Policy iteration never settles", "The same maximum for policy iteration."),
+        ("P16", "A strange horizon for enumeration (0, negative or a fraction of a period)", "Rejected: it needs a whole number of periods, at least 1."),
+        ("P17", "A value turns into NaN or infinity", "The calculation stops with an error, so bad numbers cannot spread quietly."),
+    ], (0.45, 3.0, 3.1))
+    story.append(Spacer(1, 4))
+    story.append(Paragraph("We did not guard against things like typing text instead of a number: that is careless typing, not part of this problem, "
+                           "and the assignment fixes all the numbers.", SMALL))
+
+    story.append(Paragraph("Part 2: Tests", H1))
     checks_table(story, "A. Ordinary situations", [
-        ("A1. Empty station (0 people)", "Wait: a shuttle would cost 100 to carry nobody.", "Best action is to wait."),
-        ("A2. Dispatching with fewer than 15 people (4)", "The shuttle takes everybody; we pay only the 100.", "Cost 100; next period has 1 to 5 people."),
-        ("A3. Does the 200-person limit matter? Try 300.", "No change to the best actions.", "Same actions up to 150 people; costs differ by 9e-11."),
-        ("A4. Chances of the next situation add up to 100%", "Exactly 100% in every situation.", "Largest error 0. A deliberately damaged table is caught by the same check."),
-        ("A5. A bigger shuttle", "Wait for more people before sending it.", "Shuttle of 5 / 15 / 30 dispatches at 5 / 13 / 17 people."),
+        ("A1. Empty station (0 people)", "Wait: a shuttle would cost 100 to carry nobody.", "Best action is to wait.", "P11"),
+        ("A2. Dispatching with fewer than 15 people (4)", "The shuttle takes everybody; we pay only the 100.", "Cost 100; next period has 1 to 5 people.", "P1"),
+        ("A3. Does the 200-person limit matter? Try 300.", "No change to the best actions.", "Same actions up to 150 people; costs differ by 9e-11.", "P2"),
+        ("A4. Chances of the next situation add up to 100%", "Exactly 100% in every situation.", "Largest error 0. A deliberately damaged table is caught by the same check.", "P3"),
+        ("A5. A bigger shuttle", "Wait for more people before sending it.", "Shuttle of 5 / 15 / 30 dispatches at 5 / 13 / 17 people.", "&ndash;"),
     ])
     checks_table(story, "B. Edges of the station", [
-        ("B1. Exactly 15 people, then 16", "15 empties the station; 16 leaves one behind.", "Costs 100 and 102."),
-        ("B2. Full station (200)", "Dispatch, and waiting cannot push it above 200.", "Best action is to dispatch; waiting stays at 200."),
-        ("B3. Nearly full (199 and 198)", "At 199 every arrival is turned away. At 198 only one fits.", "From 199: always 200. From 198: 20% to 199, 80% to 200."),
-        ("B4. Off-by-one", "201 situations (0 to 200), not 200.", "All tables are 201 wide and the graphs have 201 points."),
+        ("B1. Exactly 15 people, then 16", "15 empties the station; 16 leaves one behind.", "Costs 100 and 102.", "P1"),
+        ("B2. Full station (200)", "Dispatch, and waiting cannot push it above 200.", "Best action is to dispatch; waiting stays at 200.", "P2"),
+        ("B3. Nearly full (199 and 198)", "At 199 every arrival is turned away. At 198 only one fits.", "From 199: always 200. From 198: 20% to 199, 80% to 200.", "P2"),
+        ("B4. Off-by-one", "201 situations (0 to 200), not 200.", "All tables are 201 wide and the graphs have 201 points.", "P4"),
     ])
     checks_table(story, "C. Arrivals", [
-        ("C1. Nobody ever arrives, 10 waiting (worked by hand)", "Waiting forever costs 20/(1-0.95) = 400; dispatching once costs 100. Cheapest: 100.", "The program gives 100.000."),
+        ("C1. Nobody ever arrives, 10 waiting (worked by hand)", "Waiting forever costs 20/(1-0.95) = 400; dispatching once costs 100. Cheapest: 100.", "The program gives 100.000.", "&ndash;"),
         ("C2. Far more arrivals than the shuttle can carry (16 to 20 per period)",
          "The queue never empties, so each person left costs 2/(1-0.95) = 40 forever. A dispatch (100) pays off from 100/40, so from 3 people. "
          "(Our first guess here was 15; working it through showed the guess was wrong, not the program.)",
-         "Dispatches for every number from 3 to 152."),
+         "Dispatches for every number from 3 to 152.", "&ndash;"),
         ("C2b. Why does it stop at 152?", "Near the limit the queue hits 200 anyway, so a dispatch saves little. The point should move if the limit moves.",
-         "Last dispatch at 152 (limit 200) and 252 (limit 300): an effect of the cap."),
+         "Last dispatch at 152 (limit 200) and 252 (limit 300): an effect of the cap.", "P2"),
     ])
     checks_table(story, "D. Extreme prices", [
-        ("D1a. Free shuttle", "Dispatch whenever anyone is waiting.", "Dispatches in 200 of 200 situations."),
-        ("D1b. Free waiting", "Never dispatch; total cost 0.", "Never dispatches; cost 0."),
-        ("D2. Enormous shuttle cost (1,000,000)", "Never dispatch, even with a full station.", "Never dispatches."),
+        ("D1a. Free shuttle", "Dispatch whenever anyone is waiting.", "Dispatches in 200 of 200 situations.", "&ndash;"),
+        ("D1b. Free waiting", "Never dispatch; total cost 0.", "Never dispatches; cost 0.", "&ndash;"),
+        ("D2. Enormous shuttle cost (1,000,000)", "Never dispatch, even with a full station.", "Never dispatches.", "&ndash;"),
     ])
     checks_table(story, "E. Time and discounting", [
-        ("E1. Very short horizon (worked by hand)", "1 period left costs 2 x people. 2 periods left costs 3.9 x people + 5.7.", "Both match the program exactly."),
+        ("E1. Very short horizon (worked by hand)", "1 period left costs 2 x people. 2 periods left costs 3.9 x people + 5.7.", "Both match the program exactly.", "P6"),
         ("E2. Is 500 periods long enough? Compare 100, 200 and 500.", "The answer settles down as the horizon grows.",
-         "Difference from the no-end-date answer: 4.0 / 0.024 / 0.000000003."),
+         "Difference from the no-end-date answer: 4.0 / 0.024 / 0.000000003.", "P6"),
     ])
     checks_table(story, "F. Checks on each method", [
-        ("F1. Enumeration: the starting point", "Nothing left to pay after the last period; more periods left never costs less.", "Value after period 500 is 0 everywhere; costs only grow with more periods."),
-        ("F2. Value iteration: different starting guesses", "Same answer from any guess.", "All 0, all 1000 and random guesses agree to 4e-9."),
-        ("F3. Policy iteration: improving and ties", "Each round improves the plan. When all actions cost the same, it must not loop forever.", "6 rounds, costs never went up. The all-ties problem stopped after 1 round."),
+        ("F1. Enumeration: the starting point", "Nothing left to pay after the last period; more periods left never costs less.", "Value after period 500 is 0 everywhere; costs only grow with more periods.", "P6"),
+        ("F2. Value iteration: different starting guesses", "Same answer from any guess.", "All 0, all 1000 and random guesses agree to 4e-9.", "P7"),
+        ("F3. Policy iteration: improving and ties", "Each round improves the plan. When all actions cost the same, it must not loop forever.", "6 rounds, costs never went up. The all-ties problem stopped after 1 round.", "P8, P9"),
     ])
     checks_table(story, "G. Overall checks", [
-        ("G1. All three methods agree", "Same costs and same plan.", "Biggest gap 3e-9; identical plan."),
-        ("G2. Policy iteration from a bad start (&ldquo;always dispatch&rdquo;)", "Still finds the same best plan.", "It does."),
-        ("G3. Simulate the station 3000 times", "The average cost matches the calculated cost.", "Simulated 575.8 (&plusmn;1.7) against calculated 576.7."),
+        ("G1. All three methods agree", "Same costs and same plan.", "Biggest gap 3e-9; identical plan.", "all"),
+        ("G2. Policy iteration from a bad start (&ldquo;always dispatch&rdquo;)", "Still finds the same best plan.", "It does.", "P8"),
+        ("G3. Simulate the station 3000 times", "The average cost matches the calculated cost.", "Simulated 575.8 (&plusmn;1.7) against calculated 576.7.", "&ndash;"),
+    ])
+    checks_table(story, "H. The safety checks themselves", [
+        ("H1. Nonsense numbers (no arrivals, negative arrivals, sizes or costs, limit 0)", "Each one is rejected with a clear message.", "6 of 6 rejected.", "P12"),
+        ("H1b. Tables of the wrong size, or whose chances do not add to 100%", "Rejected.", "Both stopped.", "P12"),
+        ("H2. Discount of 1.0, 1.5 or -0.1; and 0.0", "The first three are rejected; 0.0 is allowed.", "As expected.", "P13"),
+        ("H3. Value iteration with a target it can never meet", "Stops with an error after the maximum rounds.", "It does (50 rounds allowed).", "P14"),
+        ("H4. Policy iteration allowed only 1 round (it needs 6)", "Stops with an error.", "It does.", "P15"),
+        ("H5. Enumeration with 0, -3 or 2.5 periods", "Rejected.", "All three rejected.", "P16"),
+        ("H6. A NaN or infinite cost", "All three methods stop with an error.", "They do. (An infinite cost on an action nobody uses is, rightly, not an error.)", "P17"),
+        ("H7. Waiting with 10 people", "We pay 20; next period has 11 to 15 people.", "Cost 20; chances 20% each for 11 to 15.", "P5"),
+        ("H8. Exact equation solving vs a slow repeat-until-settled calculation", "Same costs.", "Largest gap 9e-13.", "P10"),
     ])
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section]
+def three_months_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("Question 2: With 3 more months, what else would we test?", TITLE))
+    story.append(Paragraph("Everything so far checks that the program solves <i>our model</i> correctly. With more time, the bigger question is "
+                           "whether the model is a good picture of a real shuttle station, and whether the answer can be trusted if things are a bit different.", BODY))
+    items = [
+        ("Use real data for arrivals.", "We assumed 1 to 5 people arrive with equal chance. With real counts we would fit the true pattern and see whether the "
+         "&ldquo;dispatch at 13&rdquo; rule still holds."),
+        ("Rush hour and quiet times.", "Arrivals change during the day. We would add the time of day to the model and see how the best rule changes."),
+        ("What if our prices are a bit wrong?", "The costs 100 and 2 are estimates. We would try, say, 50% to 150% of each and plot how the dispatch point moves, "
+         "to see how sensitive the answer is."),
+        ("Compare with simple rivals.", "Simulate &ldquo;dispatch at 10&rdquo;, &ldquo;at 15&rdquo;, &ldquo;at 20&rdquo; and &ldquo;every period&rdquo; for a long time and show "
+         "with confidence ranges that 13 really is the cheapest."),
+        ("Test on hundreds of random problems.", "Generate random shuttle sizes, prices and arrival patterns automatically, and check on each that all three methods "
+         "agree and that a brute-force search over every plan on small versions gives the same best plan."),
+        ("A more realistic shuttle.", "Travel time (the shuttle is away for a while), several shuttles, people who give up waiting, groups arriving together, "
+         "and a larger station. We would also check the program stays fast and accurate as the station gets much bigger."),
+        ("Find the answer without being told the rules.", "Let a learning method (like the policy gradient methods in the next questions) learn from simulated "
+         "stations only, and check that it also finds about 13. That would be an independent check on our model."),
+        ("Ask someone who runs a station.", "Check that our assumptions (for example, that the waiting cost is charged after the shuttle leaves) match how it really works."),
+    ]
+    for head, body in items:
+        story.append(Paragraph(f"<b>{head}</b> {body}", ParagraphStyle("li2", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=5), bulletText="•"))
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section]
 
 story = []
 for add in SECTIONS:

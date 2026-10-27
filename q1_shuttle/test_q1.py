@@ -192,5 +192,72 @@ margin = 3 * runs.std() / np.sqrt(len(runs))
 check("G3. simulating the station 3000 times gives the same average cost the maths predicted",
       abs(runs.mean() - values[0]) < margin, f"simulated {runs.mean():.1f} (+/- {margin:.1f}) vs predicted {values[0]:.1f}")
 
+# =====================================================================================
+print("\n=== H. PROTECTIONS (bad inputs are stopped with a clear message) ===")
+
+
+def raises(error, fn):
+    """True if fn() stops with exactly this kind of error."""
+    try:
+        fn()
+    except error:
+        return True
+    except Exception:
+        return False
+    return False
+
+
+bad_problems = {"no arrivals listed": dict(ARRIVALS=[]), "negative arrivals": dict(ARRIVALS=[-1, 2]),
+                "negative shuttle size": dict(CAPACITY=-1), "negative shuttle cost": dict(DISPATCH_COST=-5),
+                "negative waiting cost": dict(WAIT_COST=-2), "station limit 0": dict(MAX_PEOPLE=0)}
+rejected = []
+for name, setting in bad_problems.items():
+    with change(**setting):
+        rejected.append(raises(ValueError, shuttle.build_tables))
+check("H1. nonsense problem numbers are rejected with a clear message (no arrivals, negative arrivals/size/costs, limit 0)",
+      all(rejected), f"{sum(rejected)} of {len(rejected)} rejected")
+
+short_costs, short_probs = costs[:, :100], probs[:, :100, :100]
+check("H1b. tables that do not match the problem, or whose chances do not add to 100%, are rejected",
+      raises(ValueError, lambda: value_iteration(short_costs, short_probs)) and
+      raises(ValueError, lambda: value_iteration(costs, broken)), "wrong size and damaged table both stopped")
+
+rejected = []
+for g in (1.0, 1.5, -0.1):
+    with change(GAMMA=g):
+        rejected.append(raises(ValueError, shuttle.build_tables))
+with change(GAMMA=0.0):
+    accepted_zero = not raises(ValueError, shuttle.build_tables)
+check("H2. a discount of 1 or more (or below 0) is rejected, because 'forever' would have no finite answer; a discount of 0 is allowed",
+      all(rejected) and accepted_zero, f"1.0, 1.5 and -0.1 rejected; 0.0 accepted")
+
+check("H3. value iteration cannot loop forever: with a tolerance it can never meet, it stops with an error after max_rounds",
+      raises(RuntimeError, lambda: value_iteration(costs, probs, tolerance=0, max_rounds=50)))
+
+check("H4. policy iteration cannot loop forever: if it needs more than max_rounds (it needs 6, we allow 1), it stops with an error",
+      raises(RuntimeError, lambda: policy_iteration(costs, probs, max_rounds=1)))
+
+check("H5. enumeration needs a whole number of periods, at least 1 (0, -3 and 2.5 are rejected)",
+      all(raises(ValueError, lambda T=T: enumeration(costs, probs, periods=T)) for T in (0, -3, 2.5)))
+
+nan_costs = costs.copy(); nan_costs[WAIT, 5] = np.nan
+inf_costs = costs.copy(); inf_costs[WAIT, 7] = np.inf     # (an infinite cost on an action nobody uses is not an error)
+check("H6. a NaN or infinite number stops the calculation instead of quietly spreading (all three methods)",
+      raises(FloatingPointError, lambda: enumeration(nan_costs, probs, 5)) and
+      raises(FloatingPointError, lambda: value_iteration(nan_costs, probs)) and
+      raises(FloatingPointError, lambda: policy_iteration(inf_costs, probs)), "NaN and infinity both caught")
+
+cost_w, next_w = cost_and_next_state_probs(10, WAIT)
+check("H7. waiting leaves everyone behind: with 10 waiting we pay 20 and next period have 11 to 15 people",
+      cost_w == 20 and np.allclose(next_w[11:16], 0.2) and np.isclose(next_w.sum(), 1), f"cost = {cost_w}")
+
+slow = np.zeros(201)                       # evaluate the best plan the slow way: repeat 'cost + discounted future' 3000 times
+P_plan, c_plan = probs[policy, np.arange(201)], costs[policy, np.arange(201)]
+for _ in range(3000):
+    slow = c_plan + GAMMA * P_plan @ slow
+check("H8. the exact equation solving used by policy iteration agrees with a slow repeat-until-settled calculation",
+      np.allclose(evaluate_policy(costs, probs, policy), slow, atol=1e-6),
+      f"largest gap {np.abs(evaluate_policy(costs, probs, policy) - slow).max():.1e}")
+
 print(f"\n{sum(results)} of {len(results)} checks passed")
 raise SystemExit(0 if all(results) else 1)
