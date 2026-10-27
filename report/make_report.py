@@ -5,7 +5,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Preformatted
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Preformatted,
+                                PageBreak, Image, KeepTogether)
+from PIL import Image as PILImage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ss = getSampleStyleSheet()
@@ -46,7 +48,45 @@ def summary_section(story):
                            "Instructions for the policy gradient questions will be added to the same README.", BODY))
 
 
-SECTIONS = [summary_section]
+CAPTION = ParagraphStyle("caption", parent=BODY, fontSize=9.5, leading=12, alignment=1,
+                         textColor=colors.HexColor("#444444"), spaceAfter=12)
+FIG_DIR = os.path.join(HERE, "..", "q1_shuttle", "figures")
+
+
+def figure(story, filename, caption, width=3.2 * inch):
+    path = os.path.join(FIG_DIR, filename)
+    w, h = PILImage.open(path).size
+    story.append(KeepTogether([Image(path, width=width, height=width * h / w), Spacer(1, 3), Paragraph(caption, CAPTION)]))
+
+
+def shuttle_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("Question 2: Value and Policy Iteration (the shuttle problem)", TITLE))
+    story.append(Paragraph("Each period we choose whether to dispatch a shuttle (cost 100, takes up to 15 people) or wait "
+                           "(every person left waiting costs 2). Between 1 and 5 new people arrive each period. "
+                           "We solve this three ways. A lower cost is better in every graph.", BODY))
+
+    story.append(Paragraph("(a) Enumeration, 500 periods", H1))
+    story.append(Paragraph("We start at the end of the 500 periods, where nothing is left to pay, and work backwards, "
+                           "keeping the cheaper of the two actions at every step. The graph shows the best expected total "
+                           "cost at time 0 for each number of people waiting.", BODY))
+    figure(story, "a_enumeration.png", "Figure 1. Enumeration: best expected cost at time 0 versus people waiting.")
+
+    story.append(Paragraph("(b) Value iteration, no end date", H1))
+    story.append(Paragraph("The same step is repeated with no end date until the numbers stop changing (519 rounds). "
+                           "The curve is the same as in (a), which is expected: after 500 periods the far future is "
+                           "discounted to almost nothing, and the two differ by about 3 in a billion.", BODY))
+    figure(story, "b_value_iteration.png", "Figure 2. Value iteration: best expected cost versus people waiting.")
+    figure(story, "ab_overlay.png", "Figure 3. Figures 1 and 2 on the same axes. The two curves lie on top of each other.", width=3.2 * inch)
+
+    story.append(Paragraph("(c) Policy iteration", H1))
+    story.append(Paragraph("Here we improve a plan instead of the costs. Starting from &ldquo;never dispatch&rdquo;, we measure how good "
+                           "the plan is, change it wherever another action is cheaper, and repeat. It settled after 6 rounds. "
+                           "The best plan is to wait while fewer than 13 people are waiting and to dispatch at 13 or more.", BODY))
+    figure(story, "c_policy_iteration.png", "Figure 4. Policy iteration: best action versus people waiting.")
+
+
+SECTIONS = [summary_section, shuttle_section]
 
 story = []
 for add in SECTIONS:

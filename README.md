@@ -24,8 +24,10 @@ pip install numpy matplotlib
 python run_q1.py     # solves the problem 3 ways and saves the 3 plots into figures/
 python test_q1.py    # runs the 13 edge-case / correctness checks (prints PASS or FAIL for each)
 ```
+Or open `shuttle_walkthrough.ipynb` in Jupyter / VS Code to see the graphs one by one with a short description of each part.
 
 ## What each shuttle file does
 - `shuttle.py` – defines the problem and the three methods (enumeration, value iteration, policy iteration).
 - `run_q1.py` – runs the methods and makes the plots: `figures/a_enumeration.png`, `b_value_iteration.png`, `c_policy_iteration.png`.
+- `shuttle_walkthrough.ipynb` – a notebook that goes through (a), (b) and (c) and shows each graph.
 - `test_q1.py` – the checks. Each one prints what it tests and the evidence.

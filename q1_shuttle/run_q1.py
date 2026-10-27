@@ -1,4 +1,4 @@
-"""Makes the three Question 1 plots and prints the key numbers.   Run: python run_q1.py"""
+"""Makes the Question 1 plots and prints the key numbers.   Run: python run_q1.py"""
 import os
 import numpy as np
 import matplotlib
@@ -10,33 +10,59 @@ out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "figures")
 os.makedirs(out, exist_ok=True)
 costs, probs = build_tables()
 people = np.arange(MAX_PEOPLE + 1)
+COST_LABEL = "expected total cost (lower is better)"
+
+
+def finish(name):
+    plt.grid(alpha=.3)
+    plt.tight_layout()
+    plt.savefig(f"{out}/{name}", dpi=150)
+    plt.close()
+
 
 # (a) enumeration over 500 periods
 enum_values = enumeration(costs, probs, periods=500)
 plt.figure(figsize=(6, 4))
 plt.plot(people, enum_values[0])
-plt.xlabel("people waiting at the station"); plt.ylabel("expected total cost")
+plt.xlabel("people waiting at the station")
+plt.ylabel(COST_LABEL)
 plt.title("(a) Enumeration, 500 periods: best value at time 0")
-plt.grid(alpha=.3); plt.tight_layout(); plt.savefig(f"{out}/a_enumeration.png", dpi=150); plt.close()
+finish("a_enumeration.png")
 
 # (b) value iteration
 vi_values, vi_policy, vi_rounds = value_iteration(costs, probs)
 plt.figure(figsize=(6, 4))
 plt.plot(people, vi_values, color="C1")
-plt.xlabel("people waiting at the station"); plt.ylabel("expected total cost")
+plt.xlabel("people waiting at the station")
+plt.ylabel(COST_LABEL)
 plt.title("(b) Value iteration (no end date): best value")
-plt.grid(alpha=.3); plt.tight_layout(); plt.savefig(f"{out}/b_value_iteration.png", dpi=150); plt.close()
+finish("b_value_iteration.png")
 
 # (c) policy iteration
 pi_values, pi_policy, pi_rounds = policy_iteration(costs, probs)
+cutoff = int(np.argmax(pi_policy == DISPATCH))
 plt.figure(figsize=(6, 4))
 plt.step(people, pi_policy, where="post", color="C2")
+plt.axvline(cutoff, color="0.5", ls="--", lw=1)
+plt.annotate(f"dispatch at {cutoff} or more people", xy=(cutoff, 0.5), xytext=(cutoff + 15, 0.5),
+             arrowprops=dict(arrowstyle="->", color="0.3"), va="center")
 plt.yticks([0, 1], ["wait", "dispatch"])
-plt.xlabel("people waiting at the station"); plt.ylabel("best action")
+plt.ylim(-0.1, 1.1)
+plt.xlabel("people waiting at the station")
+plt.ylabel("best action")
 plt.title("(c) Policy iteration: best action")
-plt.grid(alpha=.3); plt.tight_layout(); plt.savefig(f"{out}/c_policy_iteration.png", dpi=150); plt.close()
+finish("c_policy_iteration.png")
 
-cutoff = int(np.argmax(pi_policy == DISPATCH))
+# extra: (a) and (b) on the same axes, to show they agree
+plt.figure(figsize=(6, 4))
+plt.plot(people, enum_values[0], lw=4, alpha=.45, label="(a) enumeration, 500 periods")
+plt.plot(people, vi_values, "k--", lw=1.2, label="(b) value iteration")
+plt.xlabel("people waiting at the station")
+plt.ylabel(COST_LABEL)
+plt.title("(a) and (b) on the same axes")
+plt.legend()
+finish("ab_overlay.png")
+
 print(f"Value iteration took {vi_rounds} rounds; policy iteration took {pi_rounds} rounds")
 print(f"Best rule: dispatch when {cutoff} or more people are waiting (checked: everything above also dispatches = "
       f"{bool(np.all(pi_policy[cutoff:] == DISPATCH))})")
