@@ -33,8 +33,7 @@ def summary_section(story):
                            ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
     story.append(t)
     story.append(Spacer(1, 8))
-    story.append(Paragraph("All of the code used for this assignment is in this repository. "
-                           "It is built one question at a time and the folders match the question numbers.", BODY))
+    story.append(Paragraph("All of the code used for this assignment is in this repository.", BODY))
 
     story.append(Paragraph("How to run the code", H1))
     story.append(Paragraph("<b>Step 1.</b> Download the repository (green <i>Code</i> button, then <i>Download ZIP</i>) "
