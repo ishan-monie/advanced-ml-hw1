@@ -1,6 +1,7 @@
 """Builds report.pdf. The report is built one section at a time; add new sections to SECTIONS below.
 Run: python make_report.py"""
 import os
+import numpy as np
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -549,7 +550,192 @@ def pong_graphs_section(story):
                            f"This is why we used 0.001, as the assignment allows when training is not stable.", BODY))
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section]
+def pg_part1_three_months_section(story):
+    block = []
+    story_real, story = story, block
+    story.append(Paragraph("Policy gradient Part 1: With 3 more months", H1))
+    story.append(Paragraph("<b>Be more sure of the results.</b> Our runs depend a lot on luck: at the same settings, two Pong seeds finished far apart, and "
+                           "CartPole seeds ranged from 155 to 500. With more time we would run 20 or more seeds for each setting, report averages with "
+                           "confidence ranges, and test whether differences are real or just luck. We would also train Pong for much longer, with a GPU "
+                           "that does not sleep, to see where it levels off.", BODY))
+    story.append(Paragraph("<b>Test our own choices.</b> We chose to restart the credit at each Pong point, to show the network frame differences, and to "
+                           "learn from 4 games at a time. We would switch each choice off in turn to show that it helps. We would also search "
+                           "properly over learning rate, network size and batch size, and look at why the assignment&rsquo;s learning rate of 0.01 "
+                           "froze on Pong (for example by capping the size of each step, or rewarding some randomness).", BODY))
+    story.append(Paragraph("<b>Check it a different way.</b> We would try a convolutional network on the Pong pictures, test the trained player against "
+                           "a faster opponent and from different starting points to see whether it only learned one narrow trick, and watch recordings of its "
+                           "games to see how it plays.", BODY))
+    story_real.append(KeepTogether(block))
+
+
+def pg_part2_three_months_section(story):
+    block = []
+    story_real, story = story, block
+    story.append(Paragraph("Policy gradient Part 2 (baselines): With 3 more months", H1))
+    story.append(Paragraph("<b>Prove the baseline helps.</b> We would repeat the comparison with 20 or more seeds, on equal numbers of games and on equal "
+                           "training time, and use a proper statistical test for &ldquo;baseline against no baseline&rdquo;. We would also plot results "
+                           "against game steps, not just games, because games get longer as the player improves.", BODY))
+    story.append(Paragraph("<b>Measure the noise directly.</b> We checked on a made-up problem that a baseline cuts the noise of each learning step without "
+                           "changing where learning points. With more time we would measure the same thing during real training, by recording how much "
+                           "the learning step varies with and without a baseline, and check there is no hidden bias when the baseline is learned "
+                           "from the same games.", BODY))
+    story.append(Paragraph("<b>Try other baselines.</b> We would compare other references: an average over the batch, a learned baseline with a different size or "
+                           "learning rate, rescaling the credits, and a baseline that shares its first layers with the policy. We would also try a "
+                           "convolutional network for the Pong baseline.", BODY))
+    story_real.append(KeepTogether(block))
+
+
+def baseline_intro_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("Question 3: Policy Gradient, Part 2 (baselines)", TITLE))
+    story.append(Paragraph("<b>What a baseline is.</b> In Part 1, every push was credited with all the reward that followed it. That is noisy: "
+                           "a push can look good just because the whole stretch around it went well, and in CartPole every push is followed by "
+                           "plenty of reward early in a game, even the bad ones. A baseline is a reference number we subtract first, so that "
+                           "<i>credit = reward that followed &minus; reference</i>. A push now counts as good only if things went better than the "
+                           "reference, and as bad if they went worse.", BODY))
+    story.append(Paragraph("<b>Why this helps.</b> The reference must not depend on the push being judged. Then, averaged over many games, "
+                           "learning still points the same way as before, but each learning step is much less noisy. Less noise means steadier "
+                           "learning, and usually faster learning too.", BODY))
+    story.append(Paragraph("<b>The two baselines we use.</b> A <i>constant</i> baseline is one number for every situation: a running average of the "
+                           "rewards from earlier games. A <i>learned</i> baseline is a second small network that guesses, for each situation, how much "
+                           "reward to expect from there on, so it can tell an easy moment from a hard one. CartPole uses both; Pong uses the learned one.", BODY))
+    story.append(Paragraph("Assumptions", H1))
+    story.append(Paragraph("These are the choices we made for the baseline experiments on CartPole-v1:", BODY))
+    assumptions = [
+        "<b>Only the baseline changes.</b> The policy network, discount (0.95), learning rate (0.01), number of games (1500), "
+        "one update per game, and the random seeds are exactly as in Part 1, so any difference comes from the baseline. "
+        "&ldquo;No baseline&rdquo; in this part is exactly Part 1 (a test checks that the training curves are identical).",
+        "<b>The constant baseline</b> is a running average of the rewards from earlier games (about the last 20). Before the first game it is 0. "
+        "We use earlier games only, because an average that included the current game would depend slightly on the pushes being judged.",
+        "<b>The learned baseline</b> is a second network of the same size as the policy (4 inputs, one hidden layer of 128 units, 1 output). "
+        "It is trained after each game to guess the rewards that were actually earned (squared error), with its own Adam optimiser at the same learning rate. "
+        "Its guesses are only used as a reference: they carry no learning information into the policy.",
+        "<b>The same credit as before otherwise:</b> each push is credited with the reward from that step onwards, discounted by 0.95, "
+        "minus the reference for that step. Credits are not rescaled.",
+        "<b>Ten seeds for each method.</b> A first run with three seeds was too noisy to compare the methods (individual runs at this learning "
+        "rate can take off or collapse), so we used ten seeds each. The main model (learned baseline, seed 0) was chosen in advance; "
+        "the other seeds show how much luck matters.",
+        "<b>Final test:</b> as in Part 1, 500 new games with random choices and a different random seed.",
+    ]
+    for a in assumptions:
+        story.append(Paragraph(a, ParagraphStyle("li5", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
+
+
+def cartpole_baseline_edge_cases_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("CartPole baselines: Edge cases", H1))
+    story.append(Paragraph("The unusual situations we considered for the baseline experiments, and how the code handles each one (U1 to U9).", BODY))
+    table4(story, ("#", "Unusual situation", "How the code handles it"), [
+        ("U1", "A baseline that depends on the push it judges (this would bend the direction of learning)",
+         "The constant baseline uses earlier games only. The learned baseline is used without learning information, so it cannot be pulled around by the policy&rsquo;s own step."),
+        ("U2", "A NaN or infinite number reaching the baseline network (for example in a game&rsquo;s states)", "The update is skipped, and neither network is changed. The baseline&rsquo;s own training step is skipped too if its error is not a usable number."),
+        ("U3", "A NaN or infinite reward", "The whole update is skipped, and neither the policy nor the baseline network is changed."),
+        ("U4", "Bad settings, such as an unknown baseline name, 0 games, or a discount of 1 or more", "Rejected at the start with a clear message."),
+        ("U5", "An empty game, or a game of only one step", "An empty game is skipped. A one-step game still gives a valid update for both baselines."),
+        ("U6", "The new code accidentally changing Part 1", "&ldquo;No baseline&rdquo; subtracts a reference of exactly 0, and a test checks that it reproduces the Part 1 training curve game for game."),
+        ("U7", "The first games, before the constant baseline has anything to average", "It starts at 0, so the first update is the same as in Part 1."),
+        ("U8", "Results that cannot be repeated", "Random seeds are fixed, and the 500 test games use a different seed from training."),
+        ("U9", "One lucky or unlucky run deciding the comparison", "Ten seeds for each method, and every seed is shown."),
+    ], (0.45, 2.45, 3.6))
+
+    story.append(PageBreak())
+    story.append(Paragraph("CartPole baselines: Tests", H1))
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. "
+                           "Run them with <font face='Courier'>python test_cartpole_baselines.py</font>. "
+                           "The last column says which edge case (U1 to U9) a test covers.", BODY))
+    checks_table(story, "A. The reference and the credits", [
+        ("<b>A1.</b> Worked by hand: rewards 3, 2, 1 against a reference of 2 should give credits +1, 0, &minus;1, so the number we minimise is &minus;1.5.",
+         "It was &minus;1.50.", "&ndash;"),
+        ("<b>A2.</b> &ldquo;No baseline&rdquo; should be exactly Part 1: the same training curve, game for game.", "60 games were compared and all were identical.", "U6"),
+        ("<b>A3.</b> In all three settings, the learning step should be exactly the hand-written one (credit = reward &minus; reference).", "It was.", "U1"),
+        ("<b>A3b.</b> Before the first game the constant baseline is 0, so the first update should be identical to &ldquo;no baseline&rdquo;.", "It was identical.", "U7"),
+        ("<b>A4.</b> The learned baseline should be only a reference for the credits, with no learning information carried into the policy.",
+         "Its first use carried none; its second use (its own training) did.", "U1"),
+        ("<b>A5.</b> Bad settings (0 games, learning rate 0, discount 1.0, an unknown baseline name) should be rejected.", "All were rejected.", "U4"),
+    ])
+    checks_table(story, "B. A baseline should not change where learning points, only how noisy it is", [
+        ("<b>B1.</b> Made-up problem with a known answer (one situation where pushing 0 pays 10 and pushing 1 pays 12): with no baseline, a constant baseline and a "
+         "learned baseline, our learning signal should match the exact gradient of the expected reward.",
+         "All three matched: direction match 1.0000 in each, with size errors of 0.092 (none) and 0.001 (constant and learned).", "U1"),
+        ("<b>B1b.</b> The previous check should be able to fail: a baseline that peeks at the push&rsquo;s own reward, or subtracts twice as much, should be caught.",
+         "Both were caught (direction match 0.00 and &minus;1.00).", "U1"),
+        ("<b>B2.</b> A baseline should make the learning signal much less noisy (repeated small batches of 20 pushes).",
+         "The typical spread was 4.95 with no baseline and 1.42 with either baseline.", "&ndash;"),
+        ("<b>B3.</b> The learned baseline network should learn to expect about the right reward in the made-up problem (about 11).", "Its guess was 11.00.", "&ndash;"),
+    ])
+    checks_table(story, "C. The training loop", [
+        ("<b>C1.</b> A NaN reward should make the update skip, leaving both networks untouched (constant and learned baselines).",
+         "It was skipped and all weights were identical.", "U3"),
+        ("<b>C1b.</b> A NaN inside a game&rsquo;s states (so the learned baseline outputs NaN) should make the update skip, leaving both networks untouched.",
+         "It was skipped and all weights were identical.", "U2"),
+        ("<b>C2.</b> An empty game should be skipped instead of crashing (all three settings).", "It was skipped.", "U5"),
+        ("<b>C3.</b> A one-step game should still give a valid update (constant and learned baselines).", "It did, with all numbers finite.", "U5"),
+        ("<b>C4.</b> The same seed should give an identical training curve, and a different seed a different one (constant and learned baselines).",
+         "Same seed identical, different seed different.", "U8"),
+    ])
+    checks_table(story, "D. Does it behave as predicted? (ten seeds per method)", [
+        ("<b>D1.</b> The 500 test scores of every run should be valid (between 1 and 500).", "All 30 runs were, from 8 to 500.", "&ndash;"),
+        ("<b>D2.</b> The learned baseline should do better than no baseline, and the difference should be unlikely to be luck (two statistical tests, both p below 0.05).",
+         "330.9 against 154.9, with p = 0.018 and 0.008.", "U9"),
+        ("<b>D3.</b> The same should hold for the constant baseline.", "482.1 against 154.9, with p below 0.001 in both tests.", "U9"),
+        ("<b>D4.</b> The saved main model should reproduce exactly the 500 test scores behind the graphs.", "All 500 scores were identical (with 1 thread).", "U8"),
+        ("<b>D5.</b> Retraining the main model from the same seed should repeat the start of the saved training curve.",
+         "The first 200 training games were identical (with 1 thread).", "U8"),
+    ])
+
+
+BASE_FIG_DIR = os.path.join(HERE, "..", "q4_baselines", "figures")
+
+
+def cartpole_baseline_graphs_section(story):
+    import json
+    from scipy import stats
+    S = json.load(open(os.path.join(BASE_FIG_DIR, "cartpole_baseline_summary.json")))
+    seeds = sorted({int(k.split("seed")[1]) for k in S})
+    per = lambda b, key: np.array([S[f"{b}_seed{s}"][key] for s in seeds])
+    names = {"none": "No baseline", "constant": "Constant baseline", "learned": "Learned baseline"}
+    p = lambda a, b: stats.ttest_ind(per(a, "mean"), per(b, "mean"), equal_var=False).pvalue
+    main = S["learned_seed0"]
+
+    story.append(PageBreak())
+    story.append(Paragraph("(a) CartPole-v1 with baselines: graphs and results", H1))
+    story.append(Paragraph("The main model is the learned baseline with seed 0, chosen in advance. Figures 11 and 12 show it; "
+                           "Figures 13 and 14 compare all three methods over ten seeds each.", BODY))
+    figure_from(story, BASE_FIG_DIR, "cartpole_baseline_training.png",
+                "Figure 11. Reward of every training game (grey) and the moving average of the last 100 games (red), main model.", width=4.1 * inch)
+    figure_from(story, BASE_FIG_DIR, "cartpole_baseline_histogram.png",
+                f"Figure 12. Scores of 500 games played by the trained main model (mean {main['mean']:.1f}, standard deviation {main['std']:.1f}).", width=3.6 * inch)
+    story.append(Paragraph(f"The main model is not a good advertisement for the method: it scored a mean of {main['mean']:.1f} on the 500 test games, "
+                           f"which is below the average of its method. We report it anyway, because we chose it before seeing any results. "
+                           f"The comparison over ten seeds is the better guide.", BODY))
+    figure_from(story, BASE_FIG_DIR, "cartpole_baseline_comparison.png",
+                "Figure 13. The three methods during training. Faint lines are single seeds, bold lines are the average over ten seeds.", width=4.3 * inch)
+    figure_from(story, BASE_FIG_DIR, "cartpole_baseline_seeds.png",
+                "Figure 14. The test score of every seed (500 test games each); the black line is the average of the ten seeds.", width=3.6 * inch)
+    rows = []
+    for b in ("none", "constant", "learned"):
+        m = per(b, "mean")
+        rows.append((names[b], f"{m.mean():.1f}", f"{m.min():.0f} to {m.max():.0f}", f"{int((m >= 499.5).sum())} of {len(m)}"))
+    table4(story, ("Method", f"Average test score ({len(seeds)} seeds)", "Worst and best seed", "Seeds at the 500 limit"), rows, (1.9, 1.8, 1.6, 1.2))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(f"<b>Both baselines help.</b> The constant baseline averaged {per('constant', 'mean').mean():.0f} against "
+                           f"{per('none', 'mean').mean():.0f} with no baseline (p &lt; 0.001), and the learned baseline averaged {per('learned', 'mean').mean():.0f} "
+                           f"(p = {p('learned', 'none'):.3f}). A second statistical test, which makes fewer assumptions, agrees. "
+                           f"Only {int((per('none', 'mean') >= 499.5).sum())} of {len(seeds)} seeds without a baseline reached the 500 limit, against "
+                           f"{int((per('constant', 'mean') >= 499.5).sum())} with the constant baseline and {int((per('learned', 'mean') >= 499.5).sum())} "
+                           f"with the learned one. Training is still bumpy with a baseline: the curves in Figure 13 rise and fall.", BODY))
+    story.append(Paragraph(f"<b>A surprise.</b> We expected the learned baseline to beat the constant one, because it can tell easy moments from hard ones. "
+                           f"It did not: the constant baseline was better (p = {p('constant', 'learned'):.3f}). We did not investigate why. "
+                           f"One possible reason is that the learned network is trained with a single noisy step after each game at a high learning rate, "
+                           f"so its guesses lag behind. This is a guess, not something we tested, and with more tuning the order could change.", BODY))
+    story.append(Paragraph("<b>Luck matters a lot, and even tiny differences matter.</b> A first version of this experiment used three seeds and made the learned "
+                           "baseline look worse than no baseline. With ten seeds the picture reversed, so three seeds were not enough. "
+                           "We also found that running the same seed with a different number of computer threads can change a run completely, "
+                           "because tiny rounding differences grow over 1,500 games of training. All results here were made with 1 thread per run, "
+                           "and the tests use the same setting.", BODY))
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section, pg_part1_three_months_section, baseline_intro_section, cartpole_baseline_graphs_section, cartpole_baseline_edge_cases_section]
 
 story = []
 for add in SECTIONS:

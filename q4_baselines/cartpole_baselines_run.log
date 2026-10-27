@@ -1,0 +1,33 @@
+no baseline        seed 0: last-100 training average  163.5 | 500 test games: mean  155.4, std  12.8, range 128 to 192
+no baseline        seed 1: last-100 training average  500.0 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+no baseline        seed 2: last-100 training average  190.3 | 500 test games: mean  277.5, std  10.8, range 243 to 315
+no baseline        seed 3: last-100 training average   44.1 | 500 test games: mean   82.4, std  39.9, range 10 to 116
+no baseline        seed 4: last-100 training average  159.1 | 500 test games: mean  157.0, std  19.5, range 126 to 243
+no baseline        seed 5: last-100 training average    9.4 | 500 test games: mean    9.3, std   0.7, range 8 to 11
+no baseline        seed 6: last-100 training average  172.1 | 500 test games: mean  110.0, std  24.0, range 73 to 226
+no baseline        seed 7: last-100 training average    9.4 | 500 test games: mean    9.4, std   0.7, range 8 to 11
+no baseline        seed 8: last-100 training average  173.1 | 500 test games: mean  114.8, std   8.6, range 83 to 136
+no baseline        seed 9: last-100 training average  166.6 | 500 test games: mean  133.0, std  12.4, range 107 to 175
+constant baseline  seed 0: last-100 training average  500.0 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 1: last-100 training average  483.1 | 500 test games: mean  498.0, std   4.7, range 473 to 500
+constant baseline  seed 2: last-100 training average  498.9 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 3: last-100 training average  479.9 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 4: last-100 training average  500.0 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 5: last-100 training average  500.0 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 6: last-100 training average  425.7 | 500 test games: mean  323.0, std 113.4, range 147 to 500
+constant baseline  seed 7: last-100 training average  468.6 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 8: last-100 training average  500.0 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+constant baseline  seed 9: last-100 training average  493.2 | 500 test games: mean  499.6, std   7.8, range 325 to 500
+learned baseline   seed 0: last-100 training average  287.8 | 500 test games: mean  126.6, std   5.7, range 114 to 142
+learned baseline   seed 1: last-100 training average  495.5 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+learned baseline   seed 2: last-100 training average  361.3 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+learned baseline   seed 3: last-100 training average  139.0 | 500 test games: mean  138.1, std  17.5, range 110 to 208
+learned baseline   seed 4: last-100 training average  241.6 | 500 test games: mean  264.7, std  16.6, range 214 to 324
+learned baseline   seed 5: last-100 training average  500.0 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+learned baseline   seed 6: last-100 training average  336.2 | 500 test games: mean  227.9, std   7.9, range 207 to 256
+learned baseline   seed 7: last-100 training average  190.0 | 500 test games: mean  216.3, std   6.8, range 197 to 237
+learned baseline   seed 8: last-100 training average  236.3 | 500 test games: mean  335.3, std 113.5, range 158 to 500
+learned baseline   seed 9: last-100 training average  328.8 | 500 test games: mean  500.0, std   0.0, range 500 to 500
+no baseline       : average test score over 10 seeds  154.9 (seed-to-seed std 136.3, 1 of 10 seeds at the 500 limit)
+constant baseline : average test score over 10 seeds  482.1 (seed-to-seed std  53.0, 8 of 10 seeds at the 500 limit)
+learned baseline  : average test score over 10 seeds  330.9 (seed-to-seed std 148.8, 4 of 10 seeds at the 500 limit)
