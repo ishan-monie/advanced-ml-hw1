@@ -36,8 +36,10 @@ Or open `shuttle_walkthrough.ipynb` in Jupyter / VS Code to see the graphs one b
 Open a terminal in the `q3_policy_gradient` folder. This part also needs `pip install torch "gymnasium[classic-control]"`.
 ```
 python run_cartpole.py      # trains the base model (1500 games), plays 500 test games, saves the graphs in figures/
+python test_cartpole.py     # the 24 edge-case / correctness checks (about 1-2 minutes: it trains the model once)
 python sweep_cartpole.py    # optional: the learning-rate comparison (3 rates x 3 seeds, about a few minutes)
 ```
 - `cartpole_pg.py` - the network, the training loop and the test games.
 - `run_cartpole.py` - makes `figures/cartpole_training.png`, `cartpole_histogram.png` and `cartpole_seeds.png`.
+- `test_cartpole.py` - the checks, each printing PASS or FAIL with its evidence.
 - `sweep_cartpole.py` - compares learning rates; results are in `sweep_results.csv`.

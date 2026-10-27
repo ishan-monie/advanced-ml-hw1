@@ -333,7 +333,90 @@ def policy_gradient_section(story):
                            "depends a lot on the seed, so a single run should not be over-interpreted.", BODY))
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section]
+def cartpole_edge_cases_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("CartPole: Edge cases", H1))
+    story.append(Paragraph("The unusual situations we considered for part (a), and how the code handles each one (R1 to R9).", BODY))
+    table4(story, ("#", "Unusual situation", "How the code handles it"), [
+        ("R1", "A reward crediting pushes that came before it", "Credits are worked out backwards with a running total, so each push only gets the reward from its own step onwards."),
+        ("R2", "Bad settings: fewer than 1 game, a learning rate of 0 or below, a discount below 0 or of 1 or more",
+         "Rejected at the start with a clear message. With a discount of 1 or more the credits could grow without limit."),
+        ("R3", "A NaN or infinite number in the learning step", "That update is skipped and counted, so the network cannot be damaged. A warning is printed if it ever happens (it did not in our runs)."),
+        ("R4", "An empty or very short game", "An empty game is skipped. A one-step game still gives a valid update."),
+        ("R5", "Taking the log of a probability that is 0, or huge numbers", "Probabilities are built from the raw scores, so they are never exactly 0 and stay finite even for extreme networks or inputs."),
+        ("R6", "How a game ends", "The pole falling and the 500-step limit both simply end the game. We use CartPole-v1, so a score can never be above 500."),
+        ("R7", "Test games changing the network by accident", "Test games switch off learning information, and the network is not updated during them."),
+        ("R8", "Results that cannot be repeated", "Random seeds are fixed, and the 500 test games use a different seed from training."),
+        ("R9", "The moving average at the start, before 100 games exist", "It averages over however many games exist so far, instead of failing or counting empty games as 0."),
+    ], (0.45, 2.45, 3.6))
+
+    story.append(PageBreak())
+    story.append(Paragraph("CartPole: Tests", H1))
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 24 tests passed, meaning "
+                           "every result matched the expectation. Run them with <font face='Courier'>python test_cartpole.py</font>. "
+                           "The last column says which edge case (R1 to R9) a test covers.", BODY))
+    checks_table(story, "A. Credits and game rules", [
+        ("<b>A1.</b> Worked by hand: rewards 1, 1, 1 with discount 0.5 should give credits 1.75, 1.5 and 1.0, and a reward should never credit earlier pushes.",
+         "The credits were 1.75, 1.5 and 1.0, and a lone reward of 5 credited only its own step.", "R1"),
+        ("<b>A2.</b> A one-step game (the pole falls straight away) should still give a valid update.",
+         "The update worked and the network changed.", "R4"),
+        ("<b>A3.</b> A discount of 0 should give each push only its own reward, 0.99 should work, and 1.0 or -0.1 should be rejected.",
+         "Discounts of 0 and 0.99 worked; 1.0 and -0.1 were rejected.", "R2"),
+        ("<b>A4.</b> In the longest game (500 steps) no credit should exceed 1 / (1 - 0.95) = 20.",
+         "The largest credit was 20.000.", "&ndash;"),
+        ("<b>A5.</b> We should be using CartPole-v1 with a 500-step limit (not v0, which stops at 200).",
+         "It is CartPole-v1, with a limit of 500.", "R6"),
+        ("<b>A6.</b> Every step should give a reward of 1, so a game&rsquo;s score equals its length.",
+         "A sample game of 36 steps scored 36.", "&ndash;"),
+    ])
+    checks_table(story, "B. The network", [
+        ("<b>B1.</b> Before any training, both actions should be about equally likely.",
+         "The average chance of pushing left was 0.527.", "&ndash;"),
+        ("<b>B2.</b> The two probabilities should add up to 100% for every state, with no NaN.",
+         "The largest error was about 1e-7.", "R5"),
+        ("<b>B3.</b> An extreme network (weights multiplied by 10,000) and extreme inputs (millions) should still give finite log-probabilities.",
+         "They did.", "R5"),
+    ])
+    checks_table(story, "C. The training loop", [
+        ("<b>C1.</b> A NaN reward should make the update skip, leaving the network untouched.",
+         "The update was skipped and the weights were identical.", "R3"),
+        ("<b>C2.</b> An empty game should be skipped instead of crashing.", "It was skipped.", "R4"),
+        ("<b>C3.</b> Bad settings (0 games, a learning rate of 0 or below) should be rejected with a message.",
+         "All three were rejected.", "R2"),
+        ("<b>C4.</b> The same seed should give an identical training curve, and a different seed a different one.",
+         "Two runs with seed 3 were identical, and seed 4 differed.", "R8"),
+        ("<b>C5.</b> Test games should never change the network.",
+         "The weights were identical before and after, and no learning information was kept.", "R7"),
+        ("<b>C6.</b> A made-up problem with a known answer (one state where action 1 always pays 1 and action 0 pays 0): "
+         "our learning signal should match the exact gradient of the expected reward.",
+         "The direction matched (1.0000) and the size was within 0.9%.", "&ndash;"),
+        ("<b>C6b.</b> The previous check should really be able to fail: a learner with the sign flipped, or one that ignores the reward, should be caught.",
+         "Both were caught (a direction match of -1.00 instead of +1.00).", "&ndash;"),
+        ("<b>C7.</b> In the same made-up problem, training should make the better action much more likely.",
+         "Its chance went from 0.47 to 1.00.", "&ndash;"),
+    ])
+    checks_table(story, "D. Does it behave as predicted?", [
+        ("<b>D1.</b> The trained network should be far better than an untrained one.",
+         "155.4 against 22.0 on average (a statistical test gave t = 176).", "&ndash;"),
+        ("<b>D2.</b> With a tiny learning rate (1e-6) it should hardly learn and stay near random play (about 22).",
+         "The average of the last 100 games was 20.2.", "&ndash;"),
+        ("<b>D3.</b> Taking away the randomness (always the most likely action) should do about as well or better.",
+         "155.9 against 155.4.", "&ndash;"),
+        ("<b>D4.</b> The last 100 training games should score much higher than the first 100.",
+         "The average was 31.4 at the start and 163.5 at the end.", "&ndash;"),
+    ])
+    checks_table(story, "E. The 500 test games and the graphs", [
+        ("<b>E1.</b> There should be exactly 500 test games, each scoring between 1 and 500.",
+         "500 games, with scores from 128 to 192, a mean of 155.4 and a standard deviation of 12.8.", "R6"),
+        ("<b>E2.</b> The moving average, worked by hand: [1, 2, 3, 4] with a window of 2 should give 1, 1.5, 2.5, 3.5. With a window of 100 the first value "
+         "should be the first game, game 100 the mean of games 1 to 100, and game 101 should drop game 1.",
+         "All of these matched.", "R9"),
+        ("<b>E3.</b> Re-running should reproduce exactly the numbers behind the graphs in this report.",
+         "The training curve and the 500 test scores were identical.", "R8"),
+    ])
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section]
 
 story = []
 for add in SECTIONS:
