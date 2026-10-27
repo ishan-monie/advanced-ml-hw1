@@ -4,6 +4,7 @@ Run: python plot_pong.py MAIN_DIR OTHER_SEED_DIR [LR0.01_DIR]
   OTHER_SEED_DIR the same settings with another seed, to show how much luck matters
   LR0.01_DIR     optional: the run with the assignment's learning rate 0.01
 Prints the numbers used in the report and saves three figures in figures/."""
+import json
 import os
 import sys
 import numpy as np
@@ -31,6 +32,10 @@ if lr01_dir:
 for name, (train_r, eval_r) in runs.items():
     print(f"{name}: {len(train_r)} training games, last-100 average {train_r[-100:].mean():.2f} | "
           f"500 test games: mean {eval_r.mean():.2f}, std {eval_r.std():.2f}, range {eval_r.min():.0f} to {eval_r.max():.0f}")
+
+summary = {name: {"games": len(t), "last100": float(t[-100:].mean()), "mean": float(e.mean()), "std": float(e.std()),
+                  "min": float(e.min()), "max": float(e.max())} for name, (t, e) in runs.items()}
+json.dump(summary, open(os.path.join(out, "pong_summary.json"), "w"), indent=1)
 
 train_r, eval_r = runs["learning rate 0.001, seed 0 (main)"]
 

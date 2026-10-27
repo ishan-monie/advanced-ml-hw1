@@ -1,0 +1,26 @@
+{
+ "learning rate 0.001, seed 0 (main)": {
+  "games": 3344,
+  "last100": -11.4,
+  "mean": -11.548,
+  "std": 3.499099312680336,
+  "min": -20.0,
+  "max": 3.0
+ },
+ "learning rate 0.001, seed 1": {
+  "games": 2859,
+  "last100": 4.3,
+  "mean": 5.648,
+  "std": 6.676832782090623,
+  "min": -17.0,
+  "max": 20.0
+ },
+ "learning rate 0.01, seed 0": {
+  "games": 9486,
+  "last100": -21.0,
+  "mean": -21.0,
+  "std": 0.0,
+  "min": -21.0,
+  "max": -21.0
+ }
+}

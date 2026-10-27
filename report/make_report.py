@@ -469,7 +469,7 @@ def pong_edge_cases_section(story):
 
     story.append(PageBreak())
     story.append(Paragraph("Pong: Tests", H1))
-    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 27 tests passed, meaning "
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 28 tests passed, meaning "
                            "every result matched the expectation. Run them with <font face='Courier'>python test_pong.py</font>. "
                            "The last column says which edge case (S1 to S10) a test covers.", BODY))
     checks_table(story, "A. Scoring and game rules", [
@@ -516,10 +516,40 @@ def pong_edge_cases_section(story):
          "&minus;11.3 against &minus;20.2 (t = 11).", "&ndash;"),
         ("<b>E4.</b> Always taking the most likely push should not do much worse than random choice.", "&minus;10.1 against &minus;11.3.", "&ndash;"),
         ("<b>E5.</b> The moving average, worked by hand as in the CartPole tests, should come out right.", "All of these matched.", "&ndash;"),
+        ("<b>E6.</b> The learning-rate-0.01 run should have frozen because its network became almost always certain (above 99% sure) of its push, "
+         "while the main model stays far less certain.",
+         "99% of the 0.01 model&rsquo;s pushes were that certain (and 89% were up), against 47% for the main model. Its score was &minus;21.", "&ndash;"),
     ])
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_edge_cases_section]
+def pong_graphs_section(story):
+    import json
+    S = json.load(open(os.path.join(PG_FIG_DIR, "pong_summary.json")))
+    main, other, hot = (S["learning rate 0.001, seed 0 (main)"], S["learning rate 0.001, seed 1"], S["learning rate 0.01, seed 0"])
+    story.append(PageBreak())
+    story.append(Paragraph("(b) Pong-v5: graphs and results", H1))
+    figure_from(story, PG_FIG_DIR, "pong_training.png",
+                f"Figure 8. Score of every training game (grey) and the moving average of the last 100 games (red), main model "
+                f"({main['games']:,} games).", width=4.1 * inch)
+    story.append(Paragraph(f"The main model (learning rate 0.001, seed 0) starts at about &minus;21, where it loses every point, and improves over "
+                           f"training. Over its last 100 training games it averaged {main['last100']:.1f}.", BODY))
+    figure_from(story, PG_FIG_DIR, "pong_histogram.png",
+                f"Figure 9. Scores of 500 games played by the trained main model (mean {main['mean']:.2f}, standard deviation {main['std']:.2f}).",
+                width=3.6 * inch)
+    story.append(Paragraph(f"On the 500 test games the main model scored a mean of {main['mean']:.2f} with a standard deviation of {main['std']:.2f}, "
+                           f"with scores from {main['min']:.0f} to {main['max']:.0f}.", BODY))
+    figure_from(story, PG_FIG_DIR, "pong_runs.png",
+                "Figure 10. All three runs: learning rate 0.001 with two seeds, and the assignment&rsquo;s learning rate 0.01.", width=4.1 * inch)
+    story.append(Paragraph(f"<b>Luck matters a lot.</b> The second seed at the same settings scored a mean of {other['mean']:.2f} on its 500 test games "
+                           f"(standard deviation {other['std']:.2f}), against {main['mean']:.2f} for the main model. Our rule picked the main model "
+                           f"in advance, so it stays the main model even though the other seed did better, and a single run should not be over-interpreted.", BODY))
+    story.append(Paragraph(f"<b>The assignment&rsquo;s learning rate (0.01) did not work.</b> It stayed at &minus;21 for all {hot['games']:,} games "
+                           f"(500 test games: mean {hot['mean']:.2f}). We checked why (test E6): its network quickly became almost always certain of its "
+                           f"push, mostly up, so it stopped trying anything else and never found out that other pushes score better. "
+                           f"This is why we used 0.001, as the assignment allows when training is not stable.", BODY))
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section]
 
 story = []
 for add in SECTIONS:

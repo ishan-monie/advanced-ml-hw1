@@ -218,6 +218,21 @@ if os.path.exists(os.path.join(main_dir, "eval_rewards.npy")):
 else:
     print("(saved main model not found, so checks E1-E4 were skipped)")
 
+collapsed_dir = os.path.join(HERE, "results", "pong_lr0.01_seed0")
+if os.path.exists(os.path.join(collapsed_dir, "model.pt")):
+    def certainty(folder):
+        net = Policy()
+        net.load_state_dict(torch.load(os.path.join(folder, "model.pt")))
+        ins, _, rew = play_game(env, net)
+        pr = net(torch.from_numpy(ins)).probs.detach().numpy()
+        return ((pr < 0.01) | (pr > 0.99)).mean(), pr.mean(), rew.sum()
+    sure_01, up_01, score_01 = certainty(collapsed_dir)
+    sure_main, _, _ = certainty(main_dir)
+    check("E6. the learning-rate-0.01 run froze because its network became almost always certain (above 99% sure) of its push, so it stopped trying anything else; "
+          "the main model is far less certain",
+          sure_01 > 0.9 and sure_main < 0.7 and score_01 == -21,
+          f"0.01 model: {sure_01:.0%} of pushes near-certain, up {up_01:.0%} of the time, score {score_01:.0f}; main model: {sure_main:.0%} near-certain")
+
 ma = moving_average(np.arange(1, 5), window=2)
 games = np.arange(1, 301, dtype=float)
 ma100 = moving_average(games, 100)
