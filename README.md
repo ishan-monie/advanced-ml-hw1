@@ -7,9 +7,9 @@ This repository holds all the code for Assignment 1. It is built one question at
 ## What is here so far
 | Folder | Assignment part | Status |
 |---|---|---|
-| `q1_shuttle/` | Value and Policy Iteration (the shuttle problem) | done |
-| `q2_policy_gradient/` | Policy Gradient Part 1 (CartPole, Pong) | not started |
-| `q3_baselines/` | Policy Gradient Part 2 (baselines) | not started |
+| `q1_shuttle/` | Question 2: Value and Policy Iteration (the shuttle problem) | done |
+| `q3_policy_gradient/` | Question 3: Policy Gradient Part 1 (CartPole done, Pong not started) | in progress |
+| `q4_baselines/` | Policy Gradient Part 2 (baselines) | not started |
 
 ## How to run the code
 
@@ -31,3 +31,13 @@ Or open `shuttle_walkthrough.ipynb` in Jupyter / VS Code to see the graphs one b
 - `run_q1.py` – runs the methods and makes the plots: `figures/a_enumeration.png`, `b_value_iteration.png`, `c_policy_iteration.png`.
 - `shuttle_walkthrough.ipynb` – a notebook that goes through (a), (b) and (c) and shows each graph.
 - `test_q1.py` – the checks. Each one prints what it tests and the evidence.
+
+## Policy gradient, CartPole (`q3_policy_gradient/`)
+Open a terminal in the `q3_policy_gradient` folder. This part also needs `pip install torch "gymnasium[classic-control]"`.
+```
+python run_cartpole.py      # trains the base model (1500 games), plays 500 test games, saves the graphs in figures/
+python sweep_cartpole.py    # optional: the learning-rate comparison (3 rates x 3 seeds, about a few minutes)
+```
+- `cartpole_pg.py` - the network, the training loop and the test games.
+- `run_cartpole.py` - makes `figures/cartpole_training.png`, `cartpole_histogram.png` and `cartpole_seeds.png`.
+- `sweep_cartpole.py` - compares learning rates; results are in `sweep_results.csv`.

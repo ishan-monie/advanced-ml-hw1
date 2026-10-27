@@ -273,7 +273,67 @@ def three_months_section(story):
     story_real.append(KeepTogether(block))
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section]
+PG_FIG_DIR = os.path.join(HERE, "..", "q3_policy_gradient", "figures")
+
+
+def figure_from(story, folder, filename, caption, width=3.7 * inch):
+    path = os.path.join(folder, filename)
+    w, h = PILImage.open(path).size
+    story.append(KeepTogether([Image(path, width=width, height=width * h / w), Spacer(1, 3), Paragraph(caption, CAPTION)]))
+
+
+def policy_gradient_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("Question 3: Policy Gradient, Part 1", TITLE))
+    story.append(Paragraph("We teach a small neural network to play a game by trial and error. It outputs a probability for each action and plays "
+                           "a whole game choosing actions at random from those probabilities. Afterwards, actions that were followed by lots of "
+                           "reward are made more likely, and actions followed by little reward are made less likely. This is the basic "
+                           "version, with no baseline (the next part adds one).", BODY))
+
+    story.append(Paragraph("Assumptions", H1))
+    story.append(Paragraph("These are the choices we made for part (a), CartPole-v1:", BODY))
+    assumptions = [
+        "<b>One game is one episode.</b> CartPole ends when the pole tips too far, the cart leaves the track, or after 500 steps. "
+        "Every step the pole stays up gives a reward of 1, so the best possible score is 500.",
+        "<b>The network.</b> It sees 4 numbers (cart position, cart speed, pole angle, pole speed), has one hidden layer of 128 units, "
+        "and outputs the probability of pushing left or right.",
+        "<b>Actions are random.</b> Both during training and during the final 500 games, each push is chosen at random using the network&rsquo;s "
+        "probabilities, rather than always taking the most likely one.",
+        "<b>Credit for each push.</b> Each push is credited with the reward from that step onwards, discounted by 0.95 per step "
+        "(as the assignment says), not with the whole game&rsquo;s total.",
+        "<b>Learning.</b> One update after every game, using Adam with a learning rate of 0.01 (as the assignment says). "
+        "There is no baseline and the credits are not rescaled, because this is the basic version.",
+        "<b>Training length and luck.</b> We train for 1500 games. Results depend on the random starting point, so the main model "
+        "uses seed 0, chosen in advance, and two more seeds are shown to see how much luck matters.",
+        "<b>Final test.</b> After training the network stops learning. We play 500 new games, with a different random seed, and plot the scores.",
+        "<b>Moving average.</b> The average of the last 100 games (fewer at the very start).",
+        "<b>The 500-step limit</b> is treated like any other end of the game.",
+        "<b>Bad numbers.</b> If an update ever produced NaN or infinity, it would be skipped instead of damaging the network. "
+        "This never happened in our runs.",
+    ]
+    for a in assumptions:
+        story.append(Paragraph(a, ParagraphStyle("li3", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
+
+    story.append(PageBreak())
+    story.append(Paragraph("(a) CartPole-v1", H1))
+    story.append(Paragraph("We tried learning rates of 0.01, 0.003 and 0.001 on three seeds each. The averages of the last 100 training games were "
+                           "285, 249 and 234, but they varied a lot between seeds (for example 500 against 163 at the same rate), so no rate "
+                           "was clearly better and we kept the assignment&rsquo;s 0.01.", BODY))
+    figure_from(story, PG_FIG_DIR, "cartpole_training.png",
+                "Figure 5. Reward of every training game (grey) and the moving average of the last 100 games (red).", width=4.1 * inch)
+    story.append(Paragraph("The network clearly learns: early games last about 20 steps and later ones often reach 200 or more. But it is "
+                           "unsteady. The average rises, falls back, and rises again, and the main model finished at an average of about 164 "
+                           "over its last 100 training games. This noise is typical of the basic method and is what a baseline is meant to reduce.", BODY))
+    figure_from(story, PG_FIG_DIR, "cartpole_histogram.png",
+                "Figure 6. Scores of 500 games played by the trained main model (mean 155.4, standard deviation 12.8).", width=3.6 * inch)
+    figure_from(story, PG_FIG_DIR, "cartpole_seeds.png",
+                "Figure 7. The same training with three different random seeds. Seed 1 reaches the 500 limit and stays there; seeds 0 and 2 do not.", width=4.1 * inch)
+    story.append(Paragraph("On the 500 test games, the main model (seed 0) scored a mean of 155.4 with a standard deviation of 12.8. "
+                           "The other seeds scored a mean of 500.0 (seed 1, with no variation) and 277.5 (seed 2). Where the model ends up "
+                           "depends a lot on the seed, so a single run should not be over-interpreted.", BODY))
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section]
 
 story = []
 for add in SECTIONS:
