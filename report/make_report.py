@@ -450,7 +450,76 @@ def pong_section(story):
         story.append(Paragraph(a, ParagraphStyle("li4", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section]
+def pong_edge_cases_section(story):
+    story.append(PageBreak())
+    story.append(Paragraph("Pong: Edge cases", H1))
+    story.append(Paragraph("The unusual situations we considered for part (b), and how the code handles each one (S1 to S10).", BODY))
+    table4(story, ("#", "Unusual situation", "How the code handles it"), [
+        ("S1", "A lost point blaming pushes from an earlier point", "The running total of credit restarts at every point scored, so a push is only credited for its own point."),
+        ("S2", "Bad settings: batch below 1, a learning rate of 0 or below, a discount below 0 or of 1 or more", "Rejected at the start with a clear message."),
+        ("S3", "The very first screen of a game, which has no screen before it", "The network is shown all zeros for that step instead of failing."),
+        ("S4", "The cleaning function changing the game&rsquo;s own picture", "The function edits what it is given, so we always give it a copy."),
+        ("S5", "Using the wrong buttons", "Of the 6 actions we use only 2 (up) and 3 (down), and a test confirms what those buttons are called in the game."),
+        ("S6", "A NaN or infinite number in the learning step, or a batch with no games", "That update is skipped and counted, so the network cannot be damaged."),
+        ("S7", "Taking the log of a probability that is 0, or huge numbers", "Probabilities are built from the raw score, so they stay finite even for extreme networks or inputs."),
+        ("S8", "Running out of time or games in the middle of a batch", "The games already played are still learned from instead of being thrown away."),
+        ("S9", "Test games changing the network, or results that cannot be repeated", "Test games switch off learning, and random seeds are fixed (the 500 test games use their own seed)."),
+        ("S10", "Running out of memory", "One game is about 24 MB of inputs, so a batch of 4 is easy to hold."),
+    ], (0.45, 2.45, 3.6))
+
+    story.append(PageBreak())
+    story.append(Paragraph("Pong: Tests", H1))
+    story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. All 27 tests passed, meaning "
+                           "every result matched the expectation. Run them with <font face='Courier'>python test_pong.py</font>. "
+                           "The last column says which edge case (S1 to S10) a test covers.", BODY))
+    checks_table(story, "A. Scoring and game rules", [
+        ("<b>A1.</b> Worked by hand: a point won after 3 pushes and one lost after 2 more should give credits 0.81, 0.9, 1, &minus;0.9, &minus;1.",
+         "Those were the credits.", "S1"),
+        ("<b>A1b.</b> Without the restart, the earlier pushes should be wrongly affected by the later loss (so the restart really does something).",
+         "They were: the first credit fell from 0.81 to 0.15.", "S1"),
+        ("<b>A2.</b> Bad settings (batch 0, learning rate 0, discount 1.0 or &minus;0.1) should be rejected.", "All four were rejected.", "S2"),
+        ("<b>A3.</b> It should be ALE/Pong-v5 with 6 actions, where button 2 is up (RIGHT) and button 3 is down (LEFT).", "It was.", "S5"),
+        ("<b>A4.</b> A full game should end on its own, with rewards only &minus;1, 0 or +1 and a final score between &minus;21 and +21.",
+         "A sample game took 944 steps and scored &minus;21.", "&ndash;"),
+        ("<b>A5.</b> A game should end when one side reaches 21 points.", "The sample game ended at 0 points won and 21 lost.", "&ndash;"),
+    ])
+    checks_table(story, "B. What the network sees", [
+        ("<b>B1.</b> The first screen of a game should give all zeros.", "The largest value was 0.", "S3"),
+        ("<b>B2.</b> Later inputs should show motion: only &minus;1, 0 and +1, with both the +1 (appeared) and &minus;1 (disappeared) kinds present.",
+         "True, with about 25 changed pixels per step.", "S3"),
+        ("<b>B3.</b> Cleaning a made-up picture should give 80 x 80 values of 0 or 1, with both background colours erased.", "One object pixel was kept.", "&ndash;"),
+        ("<b>B4.</b> The game&rsquo;s own picture should not be altered by our use of the cleaning function.", "It was unchanged.", "S4"),
+    ])
+    checks_table(story, "C. The network", [
+        ("<b>C1.</b> Before any training, up and down should be about equally likely.", "The average chance of pushing up was 0.503.", "&ndash;"),
+        ("<b>C2.</b> An extreme network (weights multiplied by 10,000) and extreme inputs (millions) should still give finite log-probabilities.", "They did.", "S7"),
+        ("<b>C3.</b> One game should fit easily in memory.", "It took 24 MB.", "S10"),
+    ])
+    checks_table(story, "D. The training loop", [
+        ("<b>D1.</b> A game with a NaN reward should make the update skip, leaving the network untouched.", "It was skipped and the weights were identical.", "S6"),
+        ("<b>D2.</b> An empty list of games, or only empty games, should be skipped instead of crashing.", "Both were skipped.", "S6"),
+        ("<b>D3.</b> If the limit ends in the middle of a batch (1 game played, batch of 4), that game should still be learned from.", "The network changed.", "S8"),
+        ("<b>D4.</b> The same seed should give identical results, and a different seed different ones.", "Two runs with seed 3 matched exactly; seed 4 differed.", "S9"),
+        ("<b>D5.</b> Test games should never change the network.", "The weights were identical before and after.", "S9"),
+        ("<b>D6.</b> Test games with the same seed should give identical scores.", "They did.", "S9"),
+        ("<b>D7.</b> A made-up problem with a known answer (one input where pushing up always pays 1): our learning signal should match the exact gradient of the expected reward.",
+         "The direction matched (1.0000) and the size was within 1.8%.", "&ndash;"),
+        ("<b>D7b.</b> The previous check should be able to fail: a learner with the sign flipped, or one that ignores the reward, should be caught.",
+         "Both were caught (a direction match of &minus;1.00).", "&ndash;"),
+        ("<b>D8.</b> In the same made-up problem, training should make the better action much more likely.", "Its chance went from 0.50 to 1.00.", "&ndash;"),
+    ])
+    checks_table(story, "E. Does it behave as predicted?", [
+        ("<b>E1.</b> The saved test result should be exactly 500 games, each scoring between &minus;21 and +21.",
+         "500 games, from &minus;20 to 3, a mean of &minus;11.55 and a standard deviation of 3.50.", "&ndash;"),
+        ("<b>E2.</b> No learning step should have been skipped in the main run.", "None was, over 3,344 games.", "S6"),
+        ("<b>E3.</b> The trained network should be far better than an untrained one (30 fresh games each, statistical test t above 10).",
+         "&minus;11.3 against &minus;20.2 (t = 11).", "&ndash;"),
+        ("<b>E4.</b> Always taking the most likely push should not do much worse than random choice.", "&minus;10.1 against &minus;11.3.", "&ndash;"),
+        ("<b>E5.</b> The moving average, worked by hand as in the CartPole tests, should come out right.", "All of these matched.", "&ndash;"),
+    ])
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_edge_cases_section]
 
 story = []
 for add in SECTIONS:
