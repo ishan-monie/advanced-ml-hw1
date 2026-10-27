@@ -115,7 +115,8 @@ def shuttle_section(story):
 
 SMALL = ParagraphStyle("small", parent=BODY, fontSize=9, leading=11, spaceAfter=0)
 SMALLB = ParagraphStyle("smallb", parent=SMALL, fontName="Helvetica-Bold")
-H2 = ParagraphStyle("h2", parent=ss["Heading2"], fontSize=12, spaceBefore=10, spaceAfter=5, keepWithNext=1)
+H2 = ParagraphStyle("h2", parent=ss["Heading2"], fontSize=12.5, spaceBefore=12, spaceAfter=5, keepWithNext=1)
+H3 = ParagraphStyle("h3", parent=ss["Heading3"], fontSize=10.5, spaceBefore=9, spaceAfter=4, keepWithNext=1)
 
 
 def table4(story, headers, rows, widths):
@@ -128,22 +129,16 @@ def table4(story, headers, rows, widths):
 
 def checks_table(story, title, rows):
     """rows: (case, what we expected, what we found, protection number)"""
-    story.append(Paragraph(title, H2))
+    story.append(Paragraph(title, H3))
     table4(story, ("Case", "What we expected", "What we found", "Protects"), rows, (1.9, 1.85, 1.85, 0.9))
 
 
 def edge_cases_section(story):
-    story.append(PageBreak())
-    story.append(Paragraph("Question 2: Edge cases and tests", TITLE))
-    story.append(Paragraph("An <b>edge case</b> is an unusual situation that could break a solution, such as an empty station or a full one. "
-                           "We handled these in two ways, and this section lists both:", BODY))
-    story.append(Paragraph("&bull; <b>Part 1 &ndash; Protections:</b> what the code itself does so that unusual situations cannot cause wrong answers (P1 to P17).", BODY))
-    story.append(Paragraph("&bull; <b>Part 2 &ndash; Tests:</b> checks that try the unusual situations, and changes to the problem where we can predict the "
-                           "answer, to prove the protections work. The last column says which protection each test covers. "
-                           "All 32 tests pass. Run them with <font face='Courier'>python test_q1.py</font>.", BODY))
+    story.append(Paragraph("Edge cases and tests", H1))
+    story.append(Paragraph("The protections in the code come first (P1 to P17), then the tests that check them. The last column of each test table says which protection it covers. All 32 tests pass; run them with <font face='Courier'>python test_q1.py</font>.", BODY))
 
-    story.append(Paragraph("Part 1: Protections in the code", H1))
-    story.append(Paragraph("Built into the calculation", H2))
+    story.append(Paragraph("Protections in the code", H2))
+    story.append(Paragraph("Built into the calculation", H3))
     table4(story, ("#", "Unusual situation", "How the code handles it"), [
         ("P1", "Shuttle leaves with fewer than 15 people", "It takes everybody; the number left is never below 0 (<font face='Courier'>max(people - 15, 0)</font>)."),
         ("P2", "Arrivals would push the station past 200", "The station stops at 200 and the extra people are turned away (<font face='Courier'>min(..., 200)</font>)."),
@@ -158,7 +153,7 @@ def edge_cases_section(story):
         ("P11", "Dispatching an empty station", "Allowed, with no special rule. It is just never the best action."),
     ], (0.45, 2.5, 3.6))
     story.append(Spacer(1, 4))
-    story.append(Paragraph("Safety checks added to stop bad inputs and runaway calculations", H2))
+    story.append(Paragraph("Safety checks added to stop bad inputs and runaway calculations", H3))
     table4(story, ("#", "Unusual situation", "How the code handles it"), [
         ("P12", "Nonsense numbers: no arrivals, negative arrivals, sizes or costs, a station limit of 0, tables that do not match the problem",
          "It stops at the start with a clear message saying what is wrong."),
@@ -172,7 +167,7 @@ def edge_cases_section(story):
     story.append(Paragraph("We did not guard against things like typing text instead of a number: that is careless typing, not part of this problem, "
                            "and the assignment fixes all the numbers.", SMALL))
 
-    story.append(Paragraph("Part 2: Tests", H1))
+    story.append(Paragraph("Tests", H2))
     checks_table(story, "A. Ordinary situations", [
         ("A1. Empty station (0 people)", "Wait: a shuttle would cost 100 to carry nobody.", "Best action is to wait.", "P11"),
         ("A2. Dispatching with fewer than 15 people (4)", "The shuttle takes everybody; we pay only the 100.", "Cost 100; next period has 1 to 5 people.", "P1"),
