@@ -2,44 +2,63 @@
 
 GitHub user: **ishan-monie**  |  Repository: **advanced-ml-hw1**
 
-This repository holds all the code for Assignment 1. It is built one question at a time.
+This repository holds all the code for Assignment 1. The report (`report/report.pdf`) is built by `report/make_report.py`.
 
-## What is here so far
-| Folder | Assignment part | Status |
-|---|---|---|
-| `q1_shuttle/` | Question 2: Value and Policy Iteration (the shuttle problem) | done |
-| `q3_policy_gradient/` | Question 3: Policy Gradient Part 1 (CartPole done, Pong not started) | in progress |
-| `q4_baselines/` | Policy Gradient Part 2 (baselines) | not started |
+## What is here
+| Folder | Assignment part |
+|---|---|
+| `q1_shuttle/` | Question 2: the shuttle problem (enumeration, value iteration, policy iteration) |
+| `q3_policy_gradient/` | Question 3, Part 1: policy gradient on CartPole-v1 and Pong-v5, no baseline |
+| `q4_baselines/` | Question 3, Part 2: the same with baselines (CartPole: constant and learned; Pong: learned; plus an extra convolutional Pong network) |
+| `report/` | the report |
 
 ## How to run the code
 
-**1. Install what is needed** (Python 3.12 was used):
+**1. Install** (Python 3.12 was used):
 ```
-pip install numpy matplotlib
+pip install numpy matplotlib scipy torch "gymnasium[classic-control]" ale-py
 ```
-(Later parts also need `torch`, `gymnasium` and `ale-py`; these are added when those parts are done.)
 
-**2. Shuttle problem** – open a terminal in the `q1_shuttle` folder:
+**2. Shuttle problem** – open a terminal in `q1_shuttle`:
 ```
 python run_q1.py     # solves the problem 3 ways and saves the 3 plots into figures/
-python test_q1.py    # runs the 32 edge-case / correctness checks (prints PASS or FAIL for each)
+python test_q1.py    # the 32 edge-case / correctness checks (prints PASS or FAIL for each)
 ```
-Or open `shuttle_walkthrough.ipynb` in Jupyter / VS Code to see the graphs one by one with a short description of each part.
+Or open `shuttle_walkthrough.ipynb` to see the graphs one by one with a short description of each part.
 
-## What each shuttle file does
-- `shuttle.py` – defines the problem and the three methods (enumeration, value iteration, policy iteration).
-- `run_q1.py` – runs the methods and makes the plots: `figures/a_enumeration.png`, `b_value_iteration.png`, `c_policy_iteration.png`.
-- `shuttle_walkthrough.ipynb` – a notebook that goes through (a), (b) and (c) and shows each graph.
-- `test_q1.py` – the checks. Each one prints what it tests and the evidence.
+**3. CartPole, no baseline** – open a terminal in `q3_policy_gradient`:
+```
+python run_cartpole.py      # trains the base model (1500 games), plays 500 test games, saves graphs in figures/
+python test_cartpole.py     # the 24 checks (about 1 minute; uses the saved model cartpole_model_seed0.pt)
+python sweep_cartpole.py    # optional: the learning-rate comparison (results in sweep_results.csv)
+```
 
-## Policy gradient, CartPole (`q3_policy_gradient/`)
-Open a terminal in the `q3_policy_gradient` folder. This part also needs `pip install torch "gymnasium[classic-control]"`.
+**4. Pong, no baseline** – in `q3_policy_gradient`. Pong is slow (hours), so the finished runs are included in `results/`:
 ```
-python run_cartpole.py      # trains the base model (1500 games), plays 500 test games, saves the graphs in figures/
-python test_cartpole.py     # the 24 edge-case / correctness checks (about 1-2 minutes: it trains the model once)
-python sweep_cartpole.py    # optional: the learning-rate comparison (3 rates x 3 seeds, about a few minutes)
+python pong_pg.py --lr 0.001 --seed 0 --batch 4 --max-games 10000 --time-budget 21600 --out results/pong_lr0.001_seed0_10k
+python pong_pg.py --lr 0.001 --seed 1 --batch 4 --max-games 10000 --time-budget 21600 --out results/pong_lr0.001_seed1_10k
+python pong_pg.py --lr 0.01  --seed 0 --batch 4 --time-budget 14400 --out results/pong_lr0.01_seed0
+python plot_pong.py results/pong_lr0.001_seed0_10k results/pong_lr0.001_seed1_10k results/pong_lr0.01_seed0   # the graphs
+python test_pong.py         # the 29 checks (about 3 minutes; uses the saved models in results/)
 ```
-- `cartpole_pg.py` - the network, the training loop and the test games.
-- `run_cartpole.py` - makes `figures/cartpole_training.png`, `cartpole_histogram.png` and `cartpole_seeds.png`.
-- `test_cartpole.py` - the checks, each printing PASS or FAIL with its evidence.
-- `sweep_cartpole.py` - compares learning rates; results are in `sweep_results.csv`.
+The two 0.001 runs were made on one GPU card of the course server (`CUDA_VISIBLE_DEVICES=1`, `--device cuda`); the 0.01 run on a laptop CPU.
+
+**5. Baselines** – in `q4_baselines`:
+```
+python run_cartpole_baselines.py      # CartPole: no / constant / learned baseline, 10 seeds each (about 20-30 minutes)
+python test_cartpole_baselines.py     # the 22 checks
+python pong_baseline.py --baseline learned --lr 0.001 --seed 0 --max-games 6500 --out results/pong_learned_seed0
+python pong_baseline.py --network conv --baseline learned --lr 0.001 --seed 0 --max-games 6500 --out results/pong_conv_learned_seed0   # extra experiment
+python plot_pong_baselines.py         # the Pong baseline graphs and summary
+python test_pong_baseline.py          # the checks for the Pong baseline and the convolutional network
+```
+**Repeating results exactly:** runs use fixed random seeds, but the same seed can give a different run if the number of computer threads differs
+(tiny rounding differences grow over thousands of games). The CartPole baseline runs and their tests use 1 thread per run.
+
+## What the files do
+- `q1_shuttle/shuttle.py` – the problem and the three methods; `run_q1.py` makes the plots; `test_q1.py` has the checks.
+- `q3_policy_gradient/cartpole_pg.py`, `pong_pg.py` – the network, training loop and test games for each game (basic policy gradient).
+- `q3_policy_gradient/run_cartpole.py`, `plot_pong.py` – make the graphs. `test_cartpole.py`, `test_pong.py` – the checks.
+- `q4_baselines/cartpole_baseline.py`, `pong_baseline.py` – the same methods with a baseline (`--network conv` for the convolutional extra).
+- `q4_baselines/run_cartpole_baselines.py`, `plot_pong_baselines.py` – experiments and graphs; `test_*.py` – the checks.
+- Every `test_*.py` prints what it tests and the evidence for each check (PASS or FAIL).

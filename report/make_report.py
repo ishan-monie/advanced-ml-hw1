@@ -40,13 +40,24 @@ def summary_section(story):
 
     story.append(Paragraph("How to run the code", H1))
     story.append(Paragraph("<b>Step 1.</b> Download the repository (green <i>Code</i> button, then <i>Download ZIP</i>) "
-                           "or clone it, and install the Python packages:", BODY))
-    story.append(Preformatted("pip install numpy matplotlib", CODE))
-    story.append(Paragraph("<b>Step 2.</b> Shuttle problem. Open a terminal in the <font face='Courier'>q1_shuttle</font> folder and run:", BODY))
-    story.append(Preformatted("python run_q1.py     # solves the problem 3 ways and saves the 3 plots in figures/\n"
-                              "python test_q1.py    # runs the 32 edge-case and correctness checks (PASS/FAIL for each)", CODE))
-    story.append(Paragraph("The README in the repository repeats these instructions and explains what each file does. "
-                           "Instructions for the policy gradient questions will be added to the same README.", BODY))
+                           "or clone it, and install the Python packages (Python 3.12 was used):", BODY))
+    story.append(Preformatted('pip install numpy matplotlib scipy torch "gymnasium[classic-control]" ale-py', CODE))
+    story.append(Paragraph("<b>Step 2.</b> Shuttle problem. In the <font face='Courier'>q1_shuttle</font> folder:", BODY))
+    story.append(Preformatted("""python run_q1.py     # solves the problem 3 ways and saves the 3 plots in figures/
+python test_q1.py    # the 32 edge-case and correctness checks (PASS/FAIL for each)""", CODE))
+    story.append(Paragraph("<b>Step 3.</b> Policy gradient, no baseline. In the <font face='Courier'>q3_policy_gradient</font> folder:", BODY))
+    story.append(Preformatted("""python run_cartpole.py   # CartPole: trains, plays 500 test games, saves graphs
+python test_cartpole.py  # 24 checks
+python plot_pong.py <3 result folders>   # Pong graphs (folders: see README)
+python test_pong.py      # 29 checks""", CODE))
+    story.append(Paragraph("<b>Step 4.</b> Baselines. In the <font face='Courier'>q4_baselines</font> folder:", BODY))
+    story.append(Preformatted("""python run_cartpole_baselines.py   # CartPole, 3 methods x 10 seeds (20-30 minutes)
+python test_cartpole_baselines.py  # 22 checks
+python plot_pong_baselines.py      # Pong baseline graphs
+python test_pong_baseline.py       # Pong baseline and convolutional checks""", CODE))
+    story.append(Paragraph("Pong training takes hours, so the finished Pong runs are included in the repository. The README lists the exact "
+                           "commands that made them. Runs use fixed random seeds, but a different number of computer threads can change a run "
+                           "(see the CartPole baseline results), so the CartPole baseline runs use 1 thread.", BODY))
 
 
 CAPTION = ParagraphStyle("caption", parent=BODY, fontSize=9.5, leading=12, alignment=1,
