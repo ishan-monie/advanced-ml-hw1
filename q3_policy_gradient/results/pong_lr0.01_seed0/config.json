@@ -1,0 +1,17 @@
+{
+ "lr": 0.01,
+ "batch": 4,
+ "gamma": 0.99,
+ "seed": 0,
+ "time_budget": 14400.0,
+ "max_games": 100000,
+ "eval_games": 500,
+ "log_every": 20,
+ "threads": 2,
+ "device": "auto",
+ "out": "results/pong_lr0.01_seed0",
+ "games_trained": 9486,
+ "device_used": "cpu",
+ "skipped_updates": 0,
+ "train_seconds": 36801.14193940163
+}

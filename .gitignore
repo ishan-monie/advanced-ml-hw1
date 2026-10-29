@@ -4,4 +4,8 @@ __pycache__/
 !q3_policy_gradient/cartpole_model_seed0.pt
 !q4_baselines/results/cartpole_learned_model_seed0.pt
 runs/
-q3_policy_gradient/results/
+q3_policy_gradient/results/*
+!q3_policy_gradient/results/pong_lr0.001_seed0_10k/
+!q3_policy_gradient/results/pong_lr0.001_seed1_10k/
+!q3_policy_gradient/results/pong_lr0.01_seed0/
+!q3_policy_gradient/results/**/*.pt

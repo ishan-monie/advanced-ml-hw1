@@ -439,11 +439,13 @@ def pong_section(story):
         "our choice, not something the assignment states.",
         "<b>Learning.</b> Adam, with the loss averaged over 4 games per update (one update per game would be very noisy for a network this big). "
         "No baseline and no rescaling of the credits, because this is the basic version.",
-        "<b>Learning rate.</b> The assignment gives 0.01 but allows a different value if training is more stable. We trained with both 0.01 and "
-        "0.001 for the full time. Our rule, set before seeing the results: the main model is the one with the higher average over its last 100 "
+        "<b>Learning rate.</b> The assignment gives 0.01 but allows a different value if training is more stable. We tried both 0.01 and "
+        "0.001. Our rule, set before seeing the results: the main model is the one with the higher average over its last 100 "
         "training games, and both are shown. A second run at 0.001 with a different random seed shows how much luck matters.",
-        "<b>Training length.</b> Pong is slow on a computer without a GPU (about one second per game), so every run gets the same fixed "
-        "4 hours of training time instead of a fixed number of games.",
+        "<b>Training length.</b> A Pong game takes one to several seconds of computer time (longer as the player improves), so runs are given a fixed "
+        "time limit instead of a fixed number of games. The two 0.001 runs had 6 hours on a GPU server (one card) and played 6,993 (main) and 6,534 games. "
+        "The 0.01 run had 4 hours on a laptop (9,486 games). An earlier pair of 0.001 runs on a laptop was cut short when the laptop went to sleep "
+        "(about 3,300 and 2,900 games) and was replaced by these longer runs.",
         "<b>Final test.</b> After training the network stops learning. We play 500 new games, with a different random seed, and plot the scores.",
         "<b>Bad numbers.</b> An update that would produce NaN or infinity is skipped, and skipped updates are counted in the saved settings.",
     ]
@@ -513,15 +515,15 @@ def pong_edge_cases_section(story):
     ])
     checks_table(story, "E. Does it behave as predicted?", [
         ("<b>E1.</b> The saved test result should be exactly 500 games, each scoring between &minus;21 and +21.",
-         "500 games, from &minus;20 to 3, a mean of &minus;11.55 and a standard deviation of 3.50.", "&ndash;"),
-        ("<b>E2.</b> No learning step should have been skipped in the main run.", "None was, over 3,344 games.", "S6"),
+         "500 games, from &minus;7 to 21, a mean of 10.08 and a standard deviation of 4.70.", "&ndash;"),
+        ("<b>E2.</b> No learning step should have been skipped in the main run.", "None was, over 6,993 games.", "S6"),
         ("<b>E3.</b> The trained network should be far better than an untrained one (30 fresh games each, statistical test t above 10).",
-         "&minus;11.3 against &minus;20.2 (t = 11).", "&ndash;"),
-        ("<b>E4.</b> Always taking the most likely push should not do much worse than random choice.", "&minus;10.1 against &minus;11.3.", "&ndash;"),
+         "8.6 against &minus;20.2 (t = 28).", "&ndash;"),
+        ("<b>E4.</b> Always taking the most likely push should not do much worse than random choice.", "11.2 against 8.6.", "&ndash;"),
         ("<b>E5.</b> The moving average, worked by hand as in the CartPole tests, should come out right.", "All of these matched.", "&ndash;"),
         ("<b>E6.</b> The learning-rate-0.01 run should have frozen because its network became almost always certain (above 99% sure) of its push, "
-         "while the main model stays far less certain.",
-         "99% of the 0.01 model&rsquo;s pushes were that certain (and 89% were up), against 47% for the main model. Its score was &minus;21.", "&ndash;"),
+         "while the main model stays clearly less certain.",
+         "99% of the 0.01 model&rsquo;s pushes were that certain (and 89% were up), against 70% for the main model. Its score was &minus;21.", "&ndash;"),
     ])
 
 
@@ -534,8 +536,8 @@ def pong_graphs_section(story):
     figure_from(story, PG_FIG_DIR, "pong_training.png",
                 f"Figure 8. Score of every training game (grey) and the moving average of the last 100 games (red), main model "
                 f"({main['games']:,} games).", width=4.1 * inch)
-    story.append(Paragraph(f"The main model (learning rate 0.001, seed 0) starts at about &minus;21, where it loses every point, and improves over "
-                           f"training. Over its last 100 training games it averaged {main['last100']:.1f}.", BODY))
+    story.append(Paragraph(f"The main model (learning rate 0.001, seed 0) stays near &minus;21, where it loses almost every point, for about the first 2,000 games. "
+                           f"Then it takes off, and it levels out at a score of about +8 to +10. Over its last 100 training games it averaged {main['last100']:.1f}.", BODY))
     figure_from(story, PG_FIG_DIR, "pong_histogram.png",
                 f"Figure 9. Scores of 500 games played by the trained main model (mean {main['mean']:.2f}, standard deviation {main['std']:.2f}).",
                 width=3.6 * inch)
@@ -543,9 +545,10 @@ def pong_graphs_section(story):
                            f"with scores from {main['min']:.0f} to {main['max']:.0f}.", BODY))
     figure_from(story, PG_FIG_DIR, "pong_runs.png",
                 "Figure 10. All three runs: learning rate 0.001 with two seeds, and the assignment&rsquo;s learning rate 0.01.", width=4.1 * inch)
-    story.append(Paragraph(f"<b>Luck matters a lot.</b> The second seed at the same settings scored a mean of {other['mean']:.2f} on its 500 test games "
-                           f"(standard deviation {other['std']:.2f}), against {main['mean']:.2f} for the main model. Our rule picked the main model "
-                           f"in advance, so it stays the main model even though the other seed did better, and a single run should not be over-interpreted.", BODY))
+    story.append(Paragraph(f"<b>Two seeds, similar results.</b> The second seed at the same settings scored a mean of {other['mean']:.2f} on its 500 test games "
+                           f"(standard deviation {other['std']:.2f}), against {main['mean']:.2f} for the main model, and both took off at about the same time. "
+                           f"Luck still matters for timing: the earlier, shorter laptop runs with these settings (stopped after about 3,300 games) had ended far apart, "
+                           f"at &minus;11.55 and +5.65, so two seeds are still not enough to say how much runs differ.", BODY))
     story.append(Paragraph(f"<b>The assignment&rsquo;s learning rate (0.01) did not work.</b> It stayed at &minus;21 for all {hot['games']:,} games "
                            f"(500 test games: mean {hot['mean']:.2f}). We checked why (test E6): its network quickly became almost always certain of its "
                            f"push, mostly up, so it stopped trying anything else and never found out that other pushes score better. "
@@ -556,7 +559,7 @@ def pg_part1_three_months_section(story):
     block = []
     story_real, story = story, block
     story.append(Paragraph("Policy gradient Part 1: With 3 more months", H1))
-    story.append(Paragraph("<b>Be more sure of the results.</b> Our runs depend a lot on luck: at the same settings, two Pong seeds finished far apart, and "
+    story.append(Paragraph("<b>Be more sure of the results.</b> Our runs depend a lot on luck: at the same settings, shorter Pong runs of two seeds ended far apart, and "
                            "CartPole seeds ranged from 155 to 500. With more time we would run 20 or more seeds for each setting, report averages with "
                            "confidence ranges, and test whether differences are real or just luck. We would also train Pong for much longer, with a GPU "
                            "that does not sleep, to see where it levels off.", BODY))

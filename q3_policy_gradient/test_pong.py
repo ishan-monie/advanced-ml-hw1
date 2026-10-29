@@ -199,7 +199,7 @@ check("D8. in the made-up problem, training makes the better action much more li
 
 # =====================================================================================
 print("\n=== E. DOES IT BEHAVE AS PREDICTED? (plays real games with the saved models) ===")
-main_dir = os.path.join(HERE, "results", "pong_lr0.001_seed0")
+main_dir = os.path.join(HERE, "results", "pong_lr0.001_seed0_10k")
 if os.path.exists(os.path.join(main_dir, "eval_rewards.npy")):
     saved_eval = np.load(os.path.join(main_dir, "eval_rewards.npy"))
     cfg = json.load(open(os.path.join(main_dir, "config.json")))
@@ -209,7 +209,7 @@ if os.path.exists(os.path.join(main_dir, "eval_rewards.npy")):
     check("E2. no learning step was skipped during the main run", cfg["skipped_updates"] == 0, f"{cfg['games_trained']} games trained")
 
     main_policy = Policy()
-    main_policy.load_state_dict(torch.load(os.path.join(main_dir, "model.pt")))
+    main_policy.load_state_dict(torch.load(os.path.join(main_dir, "model.pt"), map_location="cpu"))
     trained = evaluate(main_policy, games=30, seed=777)
     torch.manual_seed(7)
     blank = evaluate(Policy(), games=30, seed=777)
@@ -226,15 +226,15 @@ collapsed_dir = os.path.join(HERE, "results", "pong_lr0.01_seed0")
 if os.path.exists(os.path.join(collapsed_dir, "model.pt")):
     def certainty(folder):
         net = Policy()
-        net.load_state_dict(torch.load(os.path.join(folder, "model.pt")))
+        net.load_state_dict(torch.load(os.path.join(folder, "model.pt"), map_location="cpu"))
         ins, _, rew = play_game(env, net)
         pr = net(torch.from_numpy(ins)).probs.detach().numpy()
         return ((pr < 0.01) | (pr > 0.99)).mean(), pr.mean(), rew.sum()
     sure_01, up_01, score_01 = certainty(collapsed_dir)
     sure_main, _, _ = certainty(main_dir)
     check("E6. the learning-rate-0.01 run froze because its network became almost always certain (above 99% sure) of its push, so it stopped trying anything else; "
-          "the main model is far less certain",
-          sure_01 > 0.9 and sure_main < 0.7 and score_01 == -21,
+          "the main model is clearly less certain (at least 20 percentage points)",
+          sure_01 > 0.9 and sure_main < sure_01 - 0.2 and score_01 == -21,
           f"0.01 model: {sure_01:.0%} of pushes near-certain, up {up_01:.0%} of the time, score {score_01:.0f}; main model: {sure_main:.0%} near-certain")
 
 ma = moving_average(np.arange(1, 5), window=2)

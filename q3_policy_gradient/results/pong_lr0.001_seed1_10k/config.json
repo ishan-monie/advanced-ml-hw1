@@ -1,0 +1,17 @@
+{
+ "lr": 0.001,
+ "batch": 4,
+ "gamma": 0.99,
+ "seed": 1,
+ "time_budget": 21600.0,
+ "max_games": 10000,
+ "eval_games": 500,
+ "log_every": 20,
+ "threads": 2,
+ "device": "cuda",
+ "out": "/nfs/home/eil8095/runs/pong_lr0.001_seed1_10k",
+ "games_trained": 6534,
+ "device_used": "cuda",
+ "skipped_updates": 0,
+ "train_seconds": 21601.515469551086
+}
