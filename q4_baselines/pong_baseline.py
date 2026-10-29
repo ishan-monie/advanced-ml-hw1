@@ -94,6 +94,9 @@ def update(policy, optimizer, games, gamma=GAMMA, device="cpu", reset_at_points=
             value_optimizer.zero_grad()
             value_loss.backward()
             value_optimizer.step()
+    del x, a, returns, loss                             # give the graphics card's memory back after every step (long games are large)
+    if str(device).startswith("cuda"):
+        torch.cuda.empty_cache()
     return True
 
 
