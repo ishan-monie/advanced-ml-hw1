@@ -223,7 +223,61 @@ check("C5. when the game limit ends in the middle of a batch (1 game played, bat
       not torch.equal(start_weights, torch.cat([v.flatten() for v in final.values()])))
 
 # =====================================================================================
-print("\n=== D. DOES IT BEHAVE AS PREDICTED? (uses the saved results of the experiments) ===")
+print("\n=== D. THE CONVOLUTIONAL NETWORK (extra experiment) ===")
+torch.manual_seed(0)
+conv = ConvPolicy()
+screens = torch.from_numpy(np.concatenate([made_up_game(5, seed=s)[0] for s in range(20)]))
+d_one, d_many = conv(screens[0]), conv(screens)
+check("D1. one screen gives one probability and a batch of screens one probability each, all between 0 and 1 (same as the plain network)",
+      d_one.probs.shape == () and d_many.probs.shape == (100,) and bool(((d_many.probs >= 0) & (d_many.probs <= 1)).all()),
+      f"shapes {tuple(d_one.probs.shape)} and {tuple(d_many.probs.shape)}")
+check("D2. before any training, up and down are about equally likely", 0.4 < d_many.probs.mean().item() < 0.6, f"average chance of pushing up {d_many.probs.mean():.3f}")
+
+wild = ConvPolicy()
+with torch.no_grad():
+    for p in wild.parameters():
+        p.mul_(30)
+dw = wild(torch.randn(20, 6400) * 1e5)
+check("D3. an extreme network (weights x 30) and extreme inputs (hundreds of thousands) still give finite probabilities and log-probabilities",
+      torch.isfinite(dw.probs).all().item() and torch.isfinite(dw.log_prob(dw.sample())).all().item())
+
+torch.manual_seed(0)
+cp = ConvPolicy()
+exact_conv = torch.cat([g.flatten() for g in torch.autograd.grad(2.0 * cp(XT).probs, list(cp.parameters()))])
+acts = cp(XT.repeat(4000, 1)).sample()
+before = weights(cp)
+update(cp, torch.optim.SGD(cp.parameters(), lr=1.0), toy_games(acts.tolist()), 0.9, "cpu", True, None, None)
+moved_conv = weights(cp) - before
+c_dir = torch.nn.functional.cosine_similarity(moved_conv, exact_conv, dim=0).item()
+check("D4. made-up problem with a known answer, now with the convolutional network: our learning signal points the same way as the exact gradient of the expected reward",
+      c_dir > 0.9, f"direction match {c_dir:.4f}")
+
+conv_pol, conv_val = ConvPolicy(), ConvValueNet()
+conv_before = weights(conv_pol)
+ok = update(conv_pol, torch.optim.Adam(conv_pol.parameters(), lr=0.01), games, 0.9, "cpu", True, conv_val, torch.optim.Adam(conv_val.parameters(), lr=0.01))
+conv_after = weights(conv_pol)
+check("D5. the convolutional network with the learned baseline gives a valid learning step that changes the policy network",
+      ok and torch.isfinite(conv_after).all().item() and not torch.equal(conv_before, conv_after))
+nan_game = made_up_game(5, [0, 0, np.nan, 0, -1])
+cp2, cv2 = ConvPolicy(), ConvValueNet()
+cb = weights(cp2), weights(cv2)
+skipped = update(cp2, torch.optim.Adam(cp2.parameters()), [nan_game], 0.9, "cpu", True, cv2, torch.optim.Adam(cv2.parameters())) is False
+check("D6. a NaN reward makes the update skip, with both convolutional networks untouched", skipped and torch.equal(cb[0], weights(cp2)) and torch.equal(cb[1], weights(cv2)))
+
+filt_before = conv_pol.layers[0].weight.detach().clone()
+update(conv_pol, torch.optim.Adam(conv_pol.parameters(), lr=0.01), games, 0.9, "cpu", True, None, None)
+check("D7. the first layer (the picture filters) itself receives learning, not just the layers after it", not torch.equal(filt_before, conv_pol.layers[0].weight.detach()))
+
+cfg1, cfg2 = (args_for(seed=3, max_games=2, network="conv") for _ in range(2))
+for c in (cfg1, cfg2):
+    train(c)
+r1 = np.load(os.path.join(cfg1.out, "train_rewards.npy"))
+r2 = np.load(os.path.join(cfg2.out, "train_rewards.npy"))
+check("D8. a short real run with the convolutional network works, repeats exactly with the same seed, and an unknown network name is rejected",
+      len(r1) == 2 and np.array_equal(r1, r2) and raises(ValueError, lambda: train(args_for(network="transformer"))), f"two runs of seed 3: {r1.tolist()} and {r2.tolist()}")
+
+# =====================================================================================
+print("\n=== E. DOES IT BEHAVE AS PREDICTED? (uses the saved results of the experiments) ===")
 summary_file = os.path.join(HERE, "figures", "pong_baseline_summary.json")
 if os.path.exists(summary_file):
     S = json.load(open(summary_file))

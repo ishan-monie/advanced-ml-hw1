@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from pong_pg import (Policy, discounted_returns, make_env, play_game, evaluate, moving_average, GAMMA, HIDDEN)   # noqa: E402,F401
 
 BASELINES = ("none", "learned")
+NETWORKS = ("plain", "conv")
 
 
 class ValueNet(nn.Module):
@@ -33,6 +34,36 @@ class ValueNet(nn.Module):
 
     def forward(self, x):
         return self.layers(x).squeeze(-1)
+
+
+def conv_layers(hidden):
+    """Picture filters: 80x80 picture -> 16 filters (8x8, stepping 4) -> 32 filters (4x4, stepping 2) -> one hidden layer -> 1 number."""
+    return nn.Sequential(nn.Conv2d(1, 16, 8, stride=4), nn.ReLU(), nn.Conv2d(16, 32, 4, stride=2), nn.ReLU(), nn.Flatten(),
+                         nn.Linear(32 * 8 * 8, hidden), nn.ReLU(), nn.Linear(hidden, 1))
+
+
+class ConvPolicy(nn.Module):
+    """Like Policy, but the first layer is made of small picture filters that look for shapes (ball, paddles) wherever they are."""
+
+    def __init__(self, hidden=HIDDEN):
+        super().__init__()
+        self.layers = conv_layers(hidden)
+
+    def forward(self, x):
+        lead = x.shape[:-1]                                  # one screen, or a batch of screens
+        return torch.distributions.Bernoulli(logits=self.layers(x.reshape(-1, 1, 80, 80)).reshape(lead))
+
+
+class ConvValueNet(nn.Module):
+    """The learned baseline for the convolutional setting: same picture filters, 1 number out."""
+
+    def __init__(self, hidden=HIDDEN):
+        super().__init__()
+        self.layers = conv_layers(hidden)
+
+    def forward(self, x):
+        lead = x.shape[:-1]
+        return self.layers(x.reshape(-1, 1, 80, 80)).reshape(lead)
 
 
 def update(policy, optimizer, games, gamma=GAMMA, device="cpu", reset_at_points=True, value_net=None, value_optimizer=None):
@@ -67,18 +98,19 @@ def update(policy, optimizer, games, gamma=GAMMA, device="cpu", reset_at_points=
 
 
 def train(args):
-    if args.batch < 1 or args.lr <= 0 or not (0 <= args.gamma < 1) or args.baseline not in BASELINES:
-        raise ValueError(f"batch must be at least 1, lr above 0, gamma at least 0 and below 1, and baseline one of {BASELINES}")
+    network = getattr(args, "network", "plain")
+    if args.batch < 1 or args.lr <= 0 or not (0 <= args.gamma < 1) or args.baseline not in BASELINES or network not in NETWORKS:
+        raise ValueError(f"batch must be at least 1, lr above 0, gamma at least 0 and below 1, baseline one of {BASELINES}, network one of {NETWORKS}")
     device = ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
     torch.set_num_threads(args.threads)
     torch.manual_seed(args.seed)
     os.makedirs(args.out, exist_ok=True)
     env = make_env(args.seed)
-    policy = Policy().to(device)
+    policy = (ConvPolicy() if network == "conv" else Policy()).to(device)
     optimizer = torch.optim.Adam(policy.parameters(), lr=args.lr)
     value_net = value_optimizer = None
     if args.baseline == "learned":                      # made after the policy, so the policy starts exactly as in Part 1
-        value_net = ValueNet().to(device)
+        value_net = (ConvValueNet() if network == "conv" else ValueNet()).to(device)
         value_optimizer = torch.optim.Adam(value_net.parameters(), lr=args.lr)
     scores, batch, skipped, start = [], [], 0, time.time()
 
@@ -86,7 +118,7 @@ def train(args):
         np.save(os.path.join(args.out, "train_rewards.npy"), np.array(scores))
         torch.save(policy.state_dict(), os.path.join(args.out, "model.pt"))
 
-    print(f"device: {device}, baseline: {args.baseline}, learning rate {args.lr}, {args.batch} games per update", flush=True)
+    print(f"device: {device}, network: {network}, baseline: {args.baseline}, learning rate {args.lr}, {args.batch} games per update", flush=True)
     while len(scores) < args.max_games and time.time() - start < args.time_budget:
         game = play_game(env, policy, device)
         scores.append(float(game[2].sum()))
@@ -111,6 +143,7 @@ def train(args):
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--baseline", default="learned", choices=BASELINES)
+    p.add_argument("--network", default="plain", choices=NETWORKS, help="plain (as in Part 1) or conv (picture filters, an extra experiment)")
     p.add_argument("--lr", type=float, default=0.001)
     p.add_argument("--batch", type=int, default=4, help="games per learning step")
     p.add_argument("--gamma", type=float, default=GAMMA)
