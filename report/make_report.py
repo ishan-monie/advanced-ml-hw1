@@ -137,8 +137,8 @@ tests_table([
      "15 empties the station (cost 100); 16 leaves one (cost 102); arrivals above 200 are turned away.", "Costs 100 and 102; from 198, 20% go to 199 and 80% to 200."),
     ("<b>Is 500 periods long enough?</b> Compare horizons of 100, 200 and 500 with no end date.", "The gap should shrink to nothing.", "4.0, then 0.024, then 3e-9."),
     ("<b>Simulate</b> the station 3,000 times with the best plan.", "The average cost should match the calculated cost.", "Simulated 575.8 (&plusmn; 1.7), calculated 576.7."),
-    ("<b>Bad inputs and loops:</b> negative costs, no arrivals, a discount of 1 or more, NaN numbers, methods that never settle.", "A clear error, never a silent wrong answer.", "All stopped with a message (32 checks in total)."),
 ])
+story.append(Paragraph("<b>Also tested</b> (32 checks in total in test_q1.py): bad inputs are rejected with a clear message (negative costs, no arrivals, a discount of 1 or more); NaN or infinite numbers stop the calculation instead of spreading; value and policy iteration cannot loop forever; the 201 station sizes (0 to 200) have no off-by-one in the tables or plots.", BODY))
 story.append(Paragraph("With 3 more months: shuttle problem", H2))
 story.append(Paragraph("Everything so far checks that the program solves <i>our model</i>. With more time we would ask whether the model fits a real station: use real arrival data to see if &ldquo;dispatch at 13&rdquo; still holds, "
                        "add rush hours and several shuttles, and see how far the plan moves if the costs of 100 and 2 are really 50% to 150% of what we assumed. We would also test the methods on hundreds of random problems and against a brute-force search on small ones.", BODY))
@@ -167,9 +167,8 @@ tests_table([
     ("<b>Tiny learning rate</b> (1e-6).", "It should hardly learn and stay near random play (about 22).", "The last 100 games averaged 20.2."),
     ("<b>Trained against untrained</b> over 500 games each.", "Far better (statistical test, t above 10).", "155.4 against 22.0, t = 176."),
     ("<b>Remove the randomness</b> (always take the most likely action).", "About as good as, or better than, random choice.", "155.9 against 155.4."),
-    ("<b>Game rules:</b> CartPole-v1 (500-step limit), a pole that falls at once, an extreme network (weights x 10,000).", "Scores between 1 and 500; one-step games still give a valid update; no NaN.", "All held."),
-    ("<b>Same seed twice;</b> a discount of 1 or more.", "Identical training curves; the discount is rejected.", "Both held (24 checks in total)."),
 ])
+story.append(Paragraph("<b>Also tested</b> (24 checks in total): CartPole-v1 with its 500-step limit; a game where the pole falls at once still gives a valid update; an extreme network gives no NaN; a discount of 1 or more is rejected; the same seed repeats exactly.", BODY))
 
 # ======================================================================================================== Pong
 story.append(Paragraph("(b) Pong-v5", H1))
@@ -191,20 +190,18 @@ figs([(Q3, "pong_training.png", f"Figure 7. Score of each training game and the 
 fig(Q3, "pong_runs.png", "Figure 9. All three runs: learning rate 0.001 with two seeds, and the assignment&rsquo;s 0.01.", width=3.9)
 story.append(Paragraph(f"The main model stays near &minus;21 for about 2,000 games, then takes off and levels out around +8 to +10. On the 500 test games it scored a mean of <b>{pm['mean']:.2f}</b> "
                        f"(standard deviation {pm['std']:.2f}); the second seed scored {po['mean']:.2f} ({po['std']:.2f}). <b>The assignment&rsquo;s learning rate of 0.01 did not work:</b> it stayed at &minus;21 for all "
-                       f"{ph['games']:,} games (test mean {ph['mean']:.2f}), which is why we used 0.001. Test 6 below shows why.", BODY))
+                       f"{ph['games']:,} games (test mean {ph['mean']:.2f}), which is why we used 0.001. Test 5 below shows why.", BODY))
 tests_table([
     ("<b>1. Hand-worked credits at points:</b> a point won, then one lost (rewards 0, 0, 1, 0, &minus;1; discount 0.9).", "0.81, 0.9, 1, &minus;0.9, &minus;1. Without the restart the earlier pushes would wrongly share the later loss.",
      "As expected; without the restart the first credit would fall from 0.81 to 0.15."),
-    ("<b>2. What the network sees:</b> the first screen, later screens, and the buttons.", "The first input is all zeros; later inputs show both +1 and &minus;1 (motion); buttons 2 and 3 are RIGHT and LEFT.",
-     "As expected (about 25 changed pixels per step)."),
-    ("<b>3. A made-up problem with a known answer</b> (one screen where pushing up pays 12 and down pays 10), and the same test with the sign flipped.", "Our signal matches the exact gradient; the flipped version is caught.",
+    ("<b>2. A made-up problem with a known answer</b> (one screen where pushing up pays 12 and down pays 10), and the same test with the sign flipped.", "Our signal matches the exact gradient; the flipped version is caught.",
      "Direction match 1.0000 (size within 1.8%); flipped: &minus;1.00."),
-    ("<b>4. Trained against untrained</b> over 30 fresh games each.", "Far better.", "8.6 against &minus;20.2, t = 28."),
-    ("<b>5. Remove the randomness</b> (always the most likely push).", "About as good as, or better than, random choice.", "11.2 against 8.6."),
-    ("<b>6. Why did 0.01 fail?</b> Measure how certain each network is of its push.", "The failed network should be almost always certain, so it stops trying other pushes.",
+    ("<b>3. Trained against untrained</b> over 30 fresh games each.", "Far better.", "8.6 against &minus;20.2, t = 28."),
+    ("<b>4. Remove the randomness</b> (always the most likely push).", "About as good as, or better than, random choice.", "11.2 against 8.6."),
+    ("<b>5. Why did 0.01 fail?</b> Measure how certain each network is of its push.", "The failed network should be almost always certain, so it stops trying other pushes.",
      "99% of its pushes were above 99% certain (and 89% were up), against 70% for the main model; its score was &minus;21."),
-    ("<b>7. Protections:</b> a NaN in the screens or rewards, an empty game, same seed twice, game limit hit mid-batch, an extreme network.", "Skipped or valid updates, identical results, no NaN.", "All held (29 checks in total)."),
 ])
+story.append(Paragraph("<b>Also tested</b> (29 checks in total): the first screen of a game has nothing before it, so the network is shown all zeros, and later screens show motion; buttons 2 and 3 are RIGHT and LEFT; the cleaning function does not alter the game&rsquo;s own picture; a NaN in the screens or rewards, or an empty game, skips the update; the same seed repeats exactly; an extreme network gives no NaN.", BODY))
 story.append(Paragraph("With 3 more months: CartPole and Pong", H2))
 story.append(Paragraph("Our results depend a lot on luck (CartPole seeds ranged from 155 to 500; shorter Pong runs of two seeds ended far apart). We would run 20 or more seeds per setting with confidence ranges, "
                        "train Pong for much longer, switch off each of our own choices in turn (credit restart, frame differences, 4 games per update), search learning rate, network size and batch size, and find out why 0.01 froze. "
@@ -268,8 +265,8 @@ tests_table([
     ("<b>Does the learned baseline learn to expect the right reward?</b> (Made-up problem: expected reward 11.)", "A guess near 11.", "11.00 (CartPole network), 11.11 (Pong network)."),
     ("<b>Do baselines help in real training?</b> CartPole, 10 seeds per method; statistical tests of each baseline against none.", "Both better.", "p = 0.018 (learned) and below 0.001 (constant)."),
     ("<b>Does the Pong baseline make learning start sooner?</b>", "Reaches an average of &minus;10 in under 60% of the games.", f"Game {l0['first_game_average_reaches_minus10']} against {n0['first_game_average_reaches_minus10']:,}; game {l1['first_game_average_reaches_minus10']} against {n1['first_game_average_reaches_minus10']:,}."),
-    ("<b>Protections:</b> NaN rewards or screens, empty and one-step games, an unknown baseline name, the convolutional network on one screen or a batch, extreme inputs.", "Skipped or valid, nothing damaged.", "All held (22 and 26 checks in total). Writing the NaN-screen test also found and fixed a crash in the Pong code."),
 ])
+story.append(Paragraph("<b>Also tested</b> (22 and 26 checks in total): NaN rewards or screens skip the update with both networks untouched; empty and one-step games; an unknown baseline name is rejected; the convolutional network accepts one screen or a batch; extreme inputs. Writing the NaN-screen test also found and fixed a crash in the Pong code.", BODY))
 
 # ======================================================================================================== 3 months (baselines)
 story.append(Paragraph("With 3 more months: baselines", H2))
