@@ -578,7 +578,7 @@ def pg_part1_three_months_section(story):
                            "learn from 4 games at a time. We would switch each choice off in turn to show that it helps. We would also search "
                            "properly over learning rate, network size and batch size, and look at why the assignment&rsquo;s learning rate of 0.01 "
                            "froze on Pong (for example by capping the size of each step, or rewarding some randomness).", BODY))
-    story.append(Paragraph("<b>Check it a different way.</b> We would try a convolutional network on the Pong pictures, test the trained player against "
+    story.append(Paragraph("<b>Check it a different way.</b> We tried one untuned convolutional network on the Pong pictures (a small extra, one seed); we would tune it and run several seeds. We would also test the trained player against "
                            "a faster opponent and from different starting points to see whether it only learned one narrow trick, and watch recordings of its "
                            "games to see how it plays.", BODY))
     story_real.append(KeepTogether(block))
@@ -596,8 +596,8 @@ def pg_part2_three_months_section(story):
                            "the learning step varies with and without a baseline, and check there is no hidden bias when the baseline is learned "
                            "from the same games.", BODY))
     story.append(Paragraph("<b>Try other baselines.</b> We would compare other references: an average over the batch, a learned baseline with a different size or "
-                           "learning rate, rescaling the credits, and a baseline that shares its first layers with the policy. We would also try a "
-                           "convolutional network for the Pong baseline.", BODY))
+                           "learning rate, rescaling the credits, and a baseline that shares its first layers with the policy. We would also tune the "
+                           "convolutional network and run it without a baseline, since our one untuned run did worse than the plain network.", BODY))
     story_real.append(KeepTogether(block))
 
 
@@ -850,7 +850,6 @@ def pong_baseline_graphs_section(story):
     for a in assumptions:
         story.append(Paragraph(a, ParagraphStyle("li6", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
 
-    story.append(PageBreak())
     figure_from(story, BASE_FIG_DIR, "pong_baseline_training.png",
                 f"Figure 15. Score of every training game (grey) and the moving average of the last 100 games (red), main model "
                 f"(learned baseline, seed 0, {l0['games']:,} games).", width=4.1 * inch)
