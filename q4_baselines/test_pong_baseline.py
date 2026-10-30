@@ -279,10 +279,46 @@ check("D8. a short real run with the convolutional network works, repeats exactl
 # =====================================================================================
 print("\n=== E. DOES IT BEHAVE AS PREDICTED? (uses the saved results of the experiments) ===")
 summary_file = os.path.join(HERE, "figures", "pong_baseline_summary.json")
+PART1 = os.path.join(HERE, "..", "q3_policy_gradient", "results")
 if os.path.exists(summary_file):
+    from scipy import stats
     S = json.load(open(summary_file))
-    for name, v in S.items():
-        print("   ", name, v)
+    RUNS = {"learned baseline, seed 0 (main)": ("pong_learned_lr0.001_seed0", Policy),
+            "learned baseline, seed 1": ("pong_learned_lr0.001_seed1", Policy),
+            "convolutional + learned baseline, seed 0": ("pong_conv_learned_lr0.001_seed0", ConvPolicy)}
+    bad_runs = []
+    for name, (folder, _) in RUNS.items():
+        scores = np.load(os.path.join(HERE, "results", folder, "eval_rewards.npy"))
+        cfg = json.load(open(os.path.join(HERE, "results", folder, "config.json")))
+        if not (len(scores) == 500 and scores.min() >= -21 and scores.max() <= 21 and cfg["skipped_updates"] == 0):
+            bad_runs.append(name)
+    check("E1. each saved run has exactly 500 test games, every score between -21 and +21, and no skipped learning step",
+          not bad_runs, "; ".join(f"{n}: {S[n]['games']:,} games, mean {S[n]['mean']:.2f}, std {S[n]['std']:.2f}" for n in RUNS))
+
+    sooner = all(S[f"learned baseline, seed {s}" + (" (main)" if s == 0 else "")]["first_game_average_reaches_minus10"]
+                 < 0.6 * S[f"no baseline, seed {s}"]["first_game_average_reaches_minus10"] for s in (0, 1))
+    check("E2. the learned baseline makes Pong take off much sooner: the 100-game average first reaches -10 in under 60% of the games needed without a baseline, for both seeds",
+          sooner, "; ".join(f"seed {s}: game {S['learned baseline, seed ' + str(s) + (' (main)' if s == 0 else '')]['first_game_average_reaches_minus10']} "
+                            f"against game {S['no baseline, seed ' + str(s)]['first_game_average_reaches_minus10']}" for s in (0, 1)))
+
+    none0 = np.load(os.path.join(PART1, "pong_lr0.001_seed0_10k", "eval_rewards.npy"))
+    main_scores = np.load(os.path.join(HERE, "results", "pong_learned_lr0.001_seed0", "eval_rewards.npy"))
+    t = stats.ttest_ind(main_scores, none0, equal_var=False)
+    check("E3. the main model (learned baseline, seed 0) scores higher on its 500 test games than the no-baseline main model, and the difference is unlikely to be luck (p below 0.001)",
+          main_scores.mean() > none0.mean() and t.pvalue < 0.001, f"{main_scores.mean():.2f} against {none0.mean():.2f}, p = {t.pvalue:.1e}")
+
+    torch.set_num_threads(2)
+    torch.manual_seed(7)
+    blank = evaluate(Policy(), games=20, seed=777)
+    verdicts = []
+    for name, (folder, cls) in RUNS.items():
+        net = cls()
+        net.load_state_dict(torch.load(os.path.join(HERE, "results", folder, "model.pt"), map_location="cpu"))
+        trained = evaluate(net, games=20, seed=777)
+        tt = (trained.mean() - blank.mean()) / np.sqrt(trained.var(ddof=1) / 20 + blank.var(ddof=1) / 20)
+        verdicts.append((name, trained.mean(), tt))
+    check("E4. each trained network (both plain ones and the convolutional one) is far better than an untrained one over 20 fresh games each (statistical test t above 10)",
+          all(v[2] > 10 for v in verdicts), "; ".join(f"{n}: {m:.1f} (t = {tt:.0f})" for n, m, tt in verdicts) + f"; untrained {blank.mean():.1f}")
 else:
     print("(no saved Pong baseline results yet, so this section was skipped; run the experiments first)")
 

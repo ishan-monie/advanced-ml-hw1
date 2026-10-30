@@ -46,15 +46,15 @@ for name, folder in RUNS.items():
 summary = {}
 for name, (t, e) in loaded.items():
     ma = moving_average(t)
-    reached = np.where(ma >= 0)[0]
+    reached = np.where(ma >= -10)[0]
     window = t[:COMMON][-500:]
     summary[name] = {"games": len(t), "last500_common": float(window.mean()) if len(t) >= 500 else None,
-                     "first_game_average_reaches_0": int(reached[0]) + 1 if len(reached) else None,
+                     "first_game_average_reaches_minus10": int(reached[0]) + 1 if len(reached) else None,
                      "finished": e is not None,
                      "mean": float(e.mean()) if e is not None else None, "std": float(e.std()) if e is not None else None,
                      "min": float(e.min()) if e is not None else None, "max": float(e.max()) if e is not None else None}
     print(f"{name:42s}: {len(t):5d} games | average of games {max(1, min(len(t), COMMON) - 499)}-{min(len(t), COMMON)}: "
-          f"{'n/a' if summary[name]['last500_common'] is None else format(summary[name]['last500_common'], '.2f')} | average reaches 0 at game {summary[name]['first_game_average_reaches_0']} | "
+          f"{'n/a' if summary[name]['last500_common'] is None else format(summary[name]['last500_common'], '.2f')} | average reaches -10 at game {summary[name]['first_game_average_reaches_minus10']} | "
           + (f"500 test games: mean {e.mean():.2f}, std {e.std():.2f}, range {e.min():.0f} to {e.max():.0f}" if e is not None else "not finished (no test result yet)"))
 json.dump(summary, open(os.path.join(out, "pong_baseline_summary.json"), "w"), indent=1)
 

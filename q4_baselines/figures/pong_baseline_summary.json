@@ -1,0 +1,52 @@
+{
+ "no baseline, seed 0": {
+  "games": 6993,
+  "last500_common": 9.262,
+  "first_game_average_reaches_minus10": 2176,
+  "finished": true,
+  "mean": 10.08,
+  "std": 4.6991062980102924,
+  "min": -7.0,
+  "max": 21.0
+ },
+ "no baseline, seed 1": {
+  "games": 6534,
+  "last500_common": 10.85,
+  "first_game_average_reaches_minus10": 2091,
+  "finished": true,
+  "mean": 10.482,
+  "std": 4.980529690705598,
+  "min": -9.0,
+  "max": 20.0
+ },
+ "learned baseline, seed 0 (main)": {
+  "games": 6500,
+  "last500_common": 13.966,
+  "first_game_average_reaches_minus10": 862,
+  "finished": true,
+  "mean": 13.966,
+  "std": 3.5435637429006412,
+  "min": 2.0,
+  "max": 21.0
+ },
+ "learned baseline, seed 1": {
+  "games": 5812,
+  "last500_common": 5.292,
+  "first_game_average_reaches_minus10": 870,
+  "finished": true,
+  "mean": 5.566,
+  "std": 5.179733970002707,
+  "min": -8.0,
+  "max": 18.0
+ },
+ "convolutional + learned baseline, seed 0": {
+  "games": 4847,
+  "last500_common": 0.214,
+  "first_game_average_reaches_minus10": 1196,
+  "finished": true,
+  "mean": 0.566,
+  "std": 5.455056736643534,
+  "min": -12.0,
+  "max": 15.0
+ }
+}

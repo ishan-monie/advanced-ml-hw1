@@ -754,7 +754,7 @@ def cartpole_baseline_graphs_section(story):
 def pong_baseline_edge_cases_section(story):
     story.append(PageBreak())
     story.append(Paragraph("Pong baseline: Edge cases", H1))
-    story.append(Paragraph("The unusual situations we considered for the Pong baseline experiment, and how the code handles each one (V1 to V9). "
+    story.append(Paragraph("The unusual situations we considered for the Pong baseline experiment, and how the code handles each one (V1 to V10). "
                            "Pong uses only the learned baseline: a second network that sees the same screen-difference as the policy.", BODY))
     table4(story, ("#", "Unusual situation", "How the code handles it"), [
         ("V1", "A baseline that depends on the push it judges (this would bend the direction of learning)",
@@ -767,13 +767,15 @@ def pong_baseline_edge_cases_section(story):
         ("V7", "Credit leaking across points", "As in Part 1, the credit restarts at each point, and the baseline is trained to guess the same restarted credit."),
         ("V8", "Running out of time or games in the middle of a batch", "The games already played are still learned from."),
         ("V9", "Results that cannot be repeated", "Random seeds are fixed, and the 500 test games use their own seed."),
+        ("V10", "The convolutional extra: it must accept one screen or a batch of screens, and not produce invalid probabilities",
+         "The network reshapes any input to pictures and gives back one probability per screen. Tests cover one screen, a batch, extreme inputs and its first layer learning."),
     ], (0.45, 2.45, 3.6))
 
     story.append(PageBreak())
     story.append(Paragraph("Pong baseline: Tests", H1))
     story.append(Paragraph("Each test says what we expect to happen, and the result column says what did happen. "
                            "Run them with <font face='Courier'>python test_pong_baseline.py</font>. "
-                           "The last column says which edge case (V1 to V9) a test covers.", BODY))
+                           "The last column says which edge case (V1 to V10) a test covers.", BODY))
     checks_table(story, "A. The reference and the credits", [
         ("<b>A1.</b> The learning step should be exactly the hand-written one: credit = (reward that followed, restarting at each point) &minus; reference, averaged over the games, with and without the learned baseline.",
          "It was.", "V1, V7"),
@@ -802,9 +804,97 @@ def pong_baseline_edge_cases_section(story):
          "Same seed identical, different seed different.", "V9"),
         ("<b>C5.</b> If the game limit ends in the middle of a batch (1 game played, batch of 4), that game should still be learned from.", "The network changed.", "V8"),
     ])
+    checks_table(story, "D. The convolutional network (extra experiment)", [
+        ("<b>D1.</b> One screen should give one probability, and a batch of screens one probability each, all between 0 and 1.", "They did.", "V10"),
+        ("<b>D2.</b> Before any training, up and down should be about equally likely.", "The average chance of pushing up was 0.507.", "V10"),
+        ("<b>D3.</b> An extreme network (weights multiplied by 30) and extreme inputs (hundreds of thousands) should still give finite probabilities and log-probabilities.", "They did.", "V10"),
+        ("<b>D4.</b> On the made-up problem with a known answer, our learning signal should point the same way as the exact gradient (now with the convolutional network).",
+         "The direction match was 1.0000.", "V10"),
+        ("<b>D5.</b> The convolutional network with the learned baseline should give a valid learning step that changes the policy network.", "It did.", "V10"),
+        ("<b>D6.</b> A NaN reward should make the update skip, with both convolutional networks untouched.", "It was skipped and all weights were identical.", "V2"),
+        ("<b>D7.</b> The first layer (the picture filters) should itself receive learning, not just the layers after it.", "It did.", "V10"),
+        ("<b>D8.</b> A short real run should work and repeat exactly with the same seed, and an unknown network name should be rejected.", "All three held.", "V4, V9"),
+    ])
+    checks_table(story, "E. Does it behave as predicted? (the saved results of the experiments)", [
+        ("<b>E1.</b> Each saved run should have exactly 500 test games, every score between &minus;21 and +21, and no skipped learning step.",
+         "All three runs did (6,500, 5,812 and 4,847 games).", "V3"),
+        ("<b>E2.</b> The learned baseline should make Pong take off much sooner: the 100-game average should first reach &minus;10 in under 60% of the games needed without a baseline, for both seeds.",
+         "Game 862 against 2,176 (seed 0) and game 870 against 2,091 (seed 1).", "&ndash;"),
+        ("<b>E3.</b> The main model should score higher on its 500 test games than the no-baseline main model, and the difference should be unlikely to be luck (p below 0.001).",
+         "13.97 against 10.08, with p about 2e-44. (Seed 1 went the other way; see the results.)", "&ndash;"),
+        ("<b>E4.</b> Each trained network, including the convolutional one, should be far better than an untrained one over 20 fresh games each.",
+         "14.9, 5.6 and 0.4 against &minus;19.9 (t = 40, 17 and 14).", "&ndash;"),
+    ])
 
 
-SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section, pg_part1_three_months_section, baseline_intro_section, cartpole_baseline_graphs_section, cartpole_baseline_edge_cases_section, pong_baseline_edge_cases_section]
+def pong_baseline_graphs_section(story):
+    import json
+    S = json.load(open(os.path.join(BASE_FIG_DIR, "pong_baseline_summary.json")))
+    n0, n1 = S["no baseline, seed 0"], S["no baseline, seed 1"]
+    l0, l1 = S["learned baseline, seed 0 (main)"], S["learned baseline, seed 1"]
+    cv = S["convolutional + learned baseline, seed 0"]
+    story.append(PageBreak())
+    story.append(Paragraph("(b) Pong-v5 with a baseline: assumptions, graphs and results", H1))
+    story.append(Paragraph("Pong uses the learned baseline (the constant one is CartPole only, because Pong runs take hours). These are the choices we made:", BODY))
+    assumptions = [
+        "<b>The baseline network</b> sees the same 6,400 numbers as the policy (the difference between two screens), has one hidden layer of 256 units, "
+        "and outputs one number: the reward expected from here until the point ends. After every learning step it is trained, with its own Adam optimiser "
+        "at learning rate 0.001, to guess the credits that were actually earned (squared error). The credit restarts at every point, as in Part 1.",
+        "<b>Everything else is as in Part 1:</b> learning rate 0.001, discount 0.99, 4 games per update, random pushes both in training and in the 500 test games.",
+        "<b>Run length.</b> Each run was asked to play 6,500 games, with a 9-hour limit on one GPU card of the course server. The main run finished all 6,500 games; "
+        f"seed 1 stopped at {l1['games']:,} games and the convolutional run at {cv['games']:,} when they hit the limit. Runs are compared on equal numbers of games: "
+        "the graphs and the &ldquo;last 500 games&rdquo; averages use at most the first 6,500 games.",
+        "<b>Main model and seeds.</b> The main model is the learned baseline with seed 0, chosen in advance. Seed 1 is shown for each method to see how much luck matters. "
+        "(A first launch of these runs was stopped after 15 minutes and restarted to fix a graphics-memory problem; nothing from it was used.)",
+    ]
+    for a in assumptions:
+        story.append(Paragraph(a, ParagraphStyle("li6", parent=BODY, leftIndent=16, bulletIndent=4, spaceAfter=4), bulletText="•"))
+
+    story.append(PageBreak())
+    figure_from(story, BASE_FIG_DIR, "pong_baseline_training.png",
+                f"Figure 15. Score of every training game (grey) and the moving average of the last 100 games (red), main model "
+                f"(learned baseline, seed 0, {l0['games']:,} games).", width=4.1 * inch)
+    figure_from(story, BASE_FIG_DIR, "pong_baseline_histogram.png",
+                f"Figure 16. Scores of 500 games played by the trained main model (mean {l0['mean']:.2f}, standard deviation {l0['std']:.2f}).", width=3.6 * inch)
+    story.append(Paragraph(f"On the 500 test games the main model scored a mean of {l0['mean']:.2f} with a standard deviation of {l0['std']:.2f}, "
+                           f"with scores from {l0['min']:.0f} to {l0['max']:.0f}. It never lost a game.", BODY))
+    figure_from(story, BASE_FIG_DIR, "pong_baseline_comparison.png",
+                "Figure 17. Moving average of the last 100 training games, with and without the learned baseline (two seeds each, same settings).", width=4.3 * inch)
+    rows = []
+    for label, r in (("No baseline, seed 0", n0), ("No baseline, seed 1", n1), ("Learned baseline, seed 0 (main)", l0), ("Learned baseline, seed 1", l1)):
+        rows.append((label, f"{r['games']:,}", f"{r['last500_common']:.2f}", f"{r['first_game_average_reaches_minus10']:,}", f"{r['mean']:.2f} &plusmn; {r['std']:.2f}"))
+    table4(story, ("Run", "Games played", "Average of last 500 games (up to game 6,500)", "Game where the average first reached &minus;10", "500 test games: mean &plusmn; std"),
+           rows, (1.9, 0.8, 1.45, 1.3, 1.1))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(f"<b>The baseline makes learning start much sooner.</b> With the learned baseline, the moving average first reached &minus;10 at game "
+                           f"{l0['first_game_average_reaches_minus10']} and {l1['first_game_average_reaches_minus10']} for the two seeds, against "
+                           f"{n0['first_game_average_reaches_minus10']:,} and {n1['first_game_average_reaches_minus10']:,} without it, about 2.5 times sooner, and this "
+                           f"held for both seeds. This is what a baseline is for: each learning step is less noisy (our test on a made-up problem showed the noise "
+                           f"dropping by more than half), so the signal that tells the network what works is picked up sooner.", BODY))
+    story.append(Paragraph(f"<b>The final scores are mixed.</b> The main model (seed 0) scored {l0['mean']:.2f} on the test games against {n0['mean']:.2f} for "
+                           f"the same seed without a baseline, a difference that is very unlikely to be luck (test E3). Seed 1 went the other way: "
+                           f"{l1['mean']:.2f} with the baseline against {n1['mean']:.2f} without. That run also played fewer games ({l1['games']:,} against {n1['games']:,}) "
+                           f"and was still slowly improving, but we did not investigate why it climbed more slowly after its fast start. With two seeds per method, "
+                           f"we can say the baseline speeds up the start of learning; we cannot say that it always gives a better final player.", BODY))
+
+    story.append(PageBreak())
+    story.append(Paragraph("Extra experiment: a convolutional network for Pong", H1))
+    story.append(Paragraph("Instead of one big layer looking at all 6,400 numbers, a convolutional network first runs small picture filters over the "
+                           "80 x 80 screen, so that a shape such as the ball is recognised wherever it appears. We built it as a switch on the same code "
+                           "(everything else is identical), with the learned baseline, and tested it (tests D1 to D8). It has about a third of the weights "
+                           "of the plain network (534,065 against 1,638,913). This is an extra: the main results above use the plain network.", BODY))
+    figure_from(story, BASE_FIG_DIR, "pong_conv_comparison.png",
+                "Figure 18. Moving average of the last 100 training games: no baseline, learned baseline, and the convolutional network with the learned baseline (seed 0 each).",
+                width=4.3 * inch)
+    story.append(Paragraph(f"<b>It did not help in our setup.</b> The convolutional run took off sooner than no baseline at all (game "
+                           f"{cv['first_game_average_reaches_minus10']:,}, against {n0['first_game_average_reaches_minus10']:,}), but later than the plain network with the same baseline "
+                           f"(game {l0['first_game_average_reaches_minus10']}), and then levelled off near zero. On the 500 test games it scored {cv['mean']:.2f} "
+                           f"(standard deviation {cv['std']:.2f}), against {l0['mean']:.2f} for the plain network. It played {cv['games']:,} games before the time limit.", BODY))
+    story.append(Paragraph("This is not a fair verdict on convolutional networks. We used one seed and one untuned design (filter sizes, learning rate and hidden size were not searched), "
+                           "and we did not have time to run it without a baseline. It only shows that this version did worse than the plain network here.", BODY))
+
+
+SECTIONS = [summary_section, shuttle_section, edge_cases_section, three_months_section, policy_gradient_section, cartpole_edge_cases_section, pong_section, pong_graphs_section, pong_edge_cases_section, pg_part1_three_months_section, baseline_intro_section, cartpole_baseline_graphs_section, cartpole_baseline_edge_cases_section, pong_baseline_graphs_section, pong_baseline_edge_cases_section, pg_part2_three_months_section]
 
 story = []
 for add in SECTIONS:

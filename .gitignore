@@ -9,3 +9,4 @@ q3_policy_gradient/results/*
 !q3_policy_gradient/results/pong_lr0.001_seed1_10k/
 !q3_policy_gradient/results/pong_lr0.01_seed0/
 !q3_policy_gradient/results/**/*.pt
+!q4_baselines/results/pong_*/model.pt

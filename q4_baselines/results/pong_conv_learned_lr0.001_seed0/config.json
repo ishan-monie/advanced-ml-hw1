@@ -1,0 +1,19 @@
+{
+ "baseline": "learned",
+ "network": "conv",
+ "lr": 0.001,
+ "batch": 4,
+ "gamma": 0.99,
+ "seed": 0,
+ "time_budget": 32400.0,
+ "max_games": 6500,
+ "eval_games": 500,
+ "log_every": 20,
+ "threads": 2,
+ "device": "cuda",
+ "out": "/nfs/home/eil8095/runs/pong_conv_learned_lr0.001_seed0",
+ "games_trained": 4847,
+ "device_used": "cuda",
+ "skipped_updates": 0,
+ "train_seconds": 32406.94498682022
+}
