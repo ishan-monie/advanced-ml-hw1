@@ -68,6 +68,10 @@ def tests_table(rows):
     table(("Edge case or test", "What we expected", "What happened"), rows, (2.35, 2.05, 2.1))
 
 
+def edge_table(rows):
+    table(("Edge case", "How we handled it", "How we checked it"), rows, (2.1, 2.2, 2.2))
+
+
 # ======================================================================================================== summary
 story.append(Paragraph("Assignment 1 &ndash; Summary", TITLE))
 t = Table([["GitHub username", GITHUB_USER], ["Repository name", REPO_NAME], ["Link to the code", Paragraph(f'<link href="{REPO_URL}">{REPO_URL}</link>', LINK)]],
@@ -98,9 +102,9 @@ table(("Folder", "What it holds"), [
     (C("q4_baselines/"), "The same with baselines (CartPole: constant and learned; Pong: learned) and an extra convolutional Pong network; graphs in " + C("figures/") + ", every run in " + C("results/") + "."),
     (C("report/"), "This report (" + C("report.pdf") + ") and the script that builds it. " + C("report_full.pdf") + " is the long version that lists every check."),
 ], (1.8, 4.7))
-story.append(Paragraph("<b>Edge cases and tests.</b> Each part has one table: what we tried, what we expected beforehand, and what happened. The tests change a parameter or the problem, "
-                       "compare with hand-worked or exact answers on tiny problems, remove randomness, or check statistically that a method behaves as it should. "
-                       "The " + C("test_*.py") + " files also hold smaller protection checks (bad settings, NaN, empty games).", BODY))
+story.append(Paragraph("<b>Edge cases and tests.</b> Each part has an <i>Edge cases</i> table (the situation, how we handled it, how we checked it) and a <i>Tests</i> table "
+                       "(what we tried, what we expected beforehand, what happened). The tests change a parameter or the problem, compare with hand-worked or exact answers on tiny problems, "
+                       "remove randomness, or check statistically that a method behaves as it should.", BODY))
 
 # ======================================================================================================== shuttle
 story.append(PageBreak())
@@ -121,7 +125,16 @@ figs([(Q1, "c_policy_iteration.png", "Figure 3 (c). Policy iteration: best actio
       (Q1, "ab_overlay.png", "Figure 4. Figures 1 and 2 on the same axes: the curves lie on top of each other.")], width=3.1)
 story.append(Paragraph("Enumeration works backwards from the end of the 500 periods. Value iteration repeats the same step with no end date until the numbers stop changing (519 rounds); "
                        "its curve matches enumeration to about 3 in a billion. Policy iteration settles after 6 rounds on the plan <b>wait with fewer than 13 people, dispatch with 13 or more</b>.", BODY))
-story.append(Paragraph("Edge cases and tests", H2))
+story.append(Paragraph("Edge cases", H2))
+edge_table([
+    ("<b>Fewer people than a shuttle holds, or an empty station.</b>", "Dispatching takes everybody who is waiting (up to 15). With nobody waiting we allow dispatching, but it should never be chosen.", "0 people: the best action is to wait. 4 people: dispatch costs 100 and the next state is 1 to 5 people."),
+    ("<b>Exactly 15 and 16 people.</b> A full shuttle versus one person left behind.", "The waiting cost is charged on the people left after the shuttle goes.", "15 people: cost 100, next state 1 to 5. 16 people: cost 102, next state 2 to 6."),
+    ("<b>A full station.</b> The 200-person limit, and the people who would arrive above it.", "Extra arrivals are turned away; the transition table is built with the limit built in.", "From 198: 20% go to 199 and 80% to 200. With a limit of 300 the best actions are the same (largest cost difference 9.4e-11)."),
+    ("<b>Off-by-one errors:</b> 0 to 200 people is 201 situations.", "Every table and plot has 201 entries.", "Tables have shape (2, 201, 201); each plot has 201 points."),
+    ("<b>Bad inputs:</b> negative costs, no arrivals, a discount of 1 or more, NaN or infinite numbers, a damaged probability table.", "Rejected with a clear message, or the calculation stops; nothing is allowed to spread silently.", "All were rejected or stopped (checked for each of the three methods)."),
+    ("<b>Methods that never settle:</b> value iteration that cannot converge; policy iteration that cycles on exact ties.", "A limit on the number of rounds (it stops with an error); policy iteration keeps its action on ties.", "Forced to fail, both stop with an error. A problem where every action ties stops after 1 round."),
+])
+story.append(Paragraph("Tests", H2))
 tests_table([
     ("<b>All three methods agree</b>, including policy iteration started from &ldquo;always dispatch&rdquo; and value iteration started from 0, from 1000 and from random numbers.",
      "Same costs and same plan every time.", "Biggest gap 3.7e-9; the same plan every time."),
@@ -133,12 +146,10 @@ tests_table([
     ("<b>Heavy arrivals</b> (16 to 20 per period, more than a shuttle carries).",
      "<i>Our first prediction was wrong:</i> we expected to dispatch from 15 people. Each person left costs 2/(1-0.95) = 40 forever, so dispatching (100) already pays from 3 people.",
      "The program dispatches from 3 up to 152, which the reasoning above explains. It stops at 152 because of the 200 limit (252 with a limit of 300)."),
-    ("<b>Edges of the station:</b> exactly 15 and 16 people; 198, 199 and 200 people.",
-     "15 empties the station (cost 100); 16 leaves one (cost 102); arrivals above 200 are turned away.", "Costs 100 and 102; from 198, 20% go to 199 and 80% to 200."),
     ("<b>Is 500 periods long enough?</b> Compare horizons of 100, 200 and 500 with no end date.", "The gap should shrink to nothing.", "4.0, then 0.024, then 3e-9."),
     ("<b>Simulate</b> the station 3,000 times with the best plan.", "The average cost should match the calculated cost.", "Simulated 575.8 (&plusmn; 1.7), calculated 576.7."),
 ])
-story.append(Paragraph("<b>Also tested</b> (32 checks in total in test_q1.py): bad inputs are rejected with a clear message (negative costs, no arrivals, a discount of 1 or more); NaN or infinite numbers stop the calculation instead of spreading; value and policy iteration cannot loop forever; the 201 station sizes (0 to 200) have no off-by-one in the tables or plots.", BODY))
+story.append(Paragraph("All 32 checks (including smaller ones) are in test_q1.py.", SMALL))
 story.append(Paragraph("With 3 more months: shuttle problem", H2))
 story.append(Paragraph("Everything so far checks that the program solves <i>our model</i>. With more time we would ask whether the model fits a real station: use real arrival data to see if &ldquo;dispatch at 13&rdquo; still holds, "
                        "add rush hours and several shuttles, and see how far the plan moves if the costs of 100 and 2 are really 50% to 150% of what we assumed. We would also test the methods on hundreds of random problems and against a brute-force search on small ones.", BODY))
@@ -159,6 +170,15 @@ figs([(Q3, "cartpole_training.png", "Figure 5. Reward of each training game and 
       (Q3, "cartpole_histogram.png", "Figure 6. 500 test games with the trained model: mean 155.4, standard deviation 12.8.")], width=3.15)
 story.append(Paragraph("The network clearly learns (games last about 20 steps at first and often 200 or more later) but unsteadily, which is what a baseline is meant to fix. "
                        "On the 500 test games the three seeds scored 155.4 (std 12.8), 500.0 (std 0.0) and 277.5 (std 10.8), so one run says little about the method.", BODY))
+story.append(Paragraph("Edge cases", H2))
+edge_table([
+    ("<b>The pole falls at once</b> (a game of one step), and the 500-step limit.", "A one-step game still gives a valid update. We use CartPole-v1, whose limit is 500, not v0, whose limit is 200.", "A one-step game changes the network with finite numbers; every score is between 1 and 500 (the 500 test games ranged from 128 to 192)."),
+    ("<b>Credits growing without limit:</b> a discount of 1 or more.", "Rejected at the start.", "With discount 0.95 no credit can exceed 1/(1-0.95) = 20; the largest in a 500-step game was 20.000."),
+    ("<b>NaN or infinite numbers, and an empty game.</b>", "The update is skipped and the network is left untouched.", "Weights were identical before and after; an empty game did not crash."),
+    ("<b>Log of a probability of 0, and huge numbers.</b>", "Probabilities are built from raw scores (logits), so they are never exactly 0.", "An extreme network (weights x 10,000) and extreme inputs still gave finite log-probabilities."),
+    ("<b>Results that cannot be repeated.</b>", "Seeds are fixed, and the test games use a different seed from training.", "The same seed gave an identical training curve; a different seed a different one."),
+])
+story.append(Paragraph("Tests", H2))
 tests_table([
     ("<b>Hand-worked credits:</b> rewards 1, 1, 1 with discount 0.5.", "Credits 1.75, 1.5, 1.0, and a reward never credits earlier pushes.", "As expected."),
     ("<b>A made-up problem with a known answer:</b> one situation where action 1 pays 1 and action 0 pays 0. The exact gradient of the expected reward is known.",
@@ -168,7 +188,7 @@ tests_table([
     ("<b>Trained against untrained</b> over 500 games each.", "Far better (statistical test, t above 10).", "155.4 against 22.0, t = 176."),
     ("<b>Remove the randomness</b> (always take the most likely action).", "About as good as, or better than, random choice.", "155.9 against 155.4."),
 ])
-story.append(Paragraph("<b>Also tested</b> (24 checks in total): CartPole-v1 with its 500-step limit; a game where the pole falls at once still gives a valid update; an extreme network gives no NaN; a discount of 1 or more is rejected; the same seed repeats exactly.", BODY))
+story.append(Paragraph("All 24 checks are in test_cartpole.py.", SMALL))
 
 # ======================================================================================================== Pong
 story.append(Paragraph("(b) Pong-v5", H1))
@@ -191,6 +211,17 @@ fig(Q3, "pong_runs.png", "Figure 9. All three runs: learning rate 0.001 with two
 story.append(Paragraph(f"The main model stays near &minus;21 for about 2,000 games, then takes off and levels out around +8 to +10. On the 500 test games it scored a mean of <b>{pm['mean']:.2f}</b> "
                        f"(standard deviation {pm['std']:.2f}); the second seed scored {po['mean']:.2f} ({po['std']:.2f}). <b>The assignment&rsquo;s learning rate of 0.01 did not work:</b> it stayed at &minus;21 for all "
                        f"{ph['games']:,} games (test mean {ph['mean']:.2f}), which is why we used 0.001. Test 5 below shows why.", BODY))
+story.append(Paragraph("Edge cases", H2))
+edge_table([
+    ("<b>The first screen of a game</b> has no screen before it.", "The network is shown all zeros for that step.", "The first input was all zeros; later inputs showed both +1 and &minus;1 (motion)."),
+    ("<b>Wrong buttons.</b> The game has 6 actions; we use only 2 and 3.", "Only up (2) and down (3) can be chosen.", "The game confirms that buttons 2 and 3 are RIGHT and LEFT."),
+    ("<b>The cleaning function changes the picture it is given.</b>", "We always give it a copy.", "The game&rsquo;s own picture was unchanged afterwards."),
+    ("<b>Credit leaking across points</b> (a loss blamed on pushes from an earlier point).", "The running total restarts at every point scored.", "See test 1: hand-worked credits, and what would happen without the restart."),
+    ("<b>NaN or infinite numbers in the screens or rewards, and an empty game.</b>", "The update is skipped before the network is used.", "Weights were identical afterwards. Writing this test found a crash with NaN screens in our first version; it was fixed."),
+    ("<b>Long games and the time limit.</b> A game takes about 1,000 steps, and a run can stop in the middle of a batch.", "Games are kept as light as possible; games already played when the limit hits are still learned from.", "One game used about 24 MB, so a batch of 4 is easy to hold; a run stopped after 1 game of a batch of 4 still changed the network."),
+    ("<b>An extreme network</b> and results that cannot be repeated.", "Probabilities are built from raw scores; seeds are fixed.", "Finite probabilities with weights x 10,000; the same seed gave an identical training curve."),
+])
+story.append(Paragraph("Tests", H2))
 tests_table([
     ("<b>1. Hand-worked credits at points:</b> a point won, then one lost (rewards 0, 0, 1, 0, &minus;1; discount 0.9).", "0.81, 0.9, 1, &minus;0.9, &minus;1. Without the restart the earlier pushes would wrongly share the later loss.",
      "As expected; without the restart the first credit would fall from 0.81 to 0.15."),
@@ -201,7 +232,7 @@ tests_table([
     ("<b>5. Why did 0.01 fail?</b> Measure how certain each network is of its push.", "The failed network should be almost always certain, so it stops trying other pushes.",
      "99% of its pushes were above 99% certain (and 89% were up), against 70% for the main model; its score was &minus;21."),
 ])
-story.append(Paragraph("<b>Also tested</b> (29 checks in total): the first screen of a game has nothing before it, so the network is shown all zeros, and later screens show motion; buttons 2 and 3 are RIGHT and LEFT; the cleaning function does not alter the game&rsquo;s own picture; a NaN in the screens or rewards, or an empty game, skips the update; the same seed repeats exactly; an extreme network gives no NaN.", BODY))
+story.append(Paragraph("All 29 checks are in test_pong.py.", SMALL))
 story.append(Paragraph("With 3 more months: CartPole and Pong", H2))
 story.append(Paragraph("Our results depend a lot on luck (CartPole seeds ranged from 155 to 500; shorter Pong runs of two seeds ended far apart). We would run 20 or more seeds per setting with confidence ranges, "
                        "train Pong for much longer, switch off each of our own choices in turn (credit restart, frame differences, 4 games per update), search learning rate, network size and batch size, and find out why 0.01 froze. "
@@ -255,6 +286,16 @@ story.append(Paragraph("Extra: a convolutional network for Pong", H2))
 story.append(Paragraph(f"We also tried a network whose first layer is small picture filters (so a ball is recognised wherever it is), with the learned baseline, as a separate extra (one seed, untuned, {cv['games']:,} games). "
                        f"It took off earlier than no baseline at all but then levelled off near zero: <b>test score {cv['mean']:.2f} &plusmn; {cv['std']:.2f}</b>, against {l0['mean']:.2f} for the plain network. "
                        "It did not help in our setup; this is not a fair verdict on convolutional networks (no tuning, one seed, no run without a baseline).", BODY))
+story.append(Paragraph("Edge cases", H2))
+edge_table([
+    ("<b>A baseline that depends on the push it judges</b> would bend the direction of learning.", "The constant baseline uses earlier games only; the learned baseline carries no learning information into the policy&rsquo;s step.", "A check on the learned baseline&rsquo;s use found none; see the tests for a baseline that peeks, which is caught."),
+    ("<b>The first games:</b> nothing to average yet for the constant baseline.", "It starts at 0, so the first update equals Part 1&rsquo;s.", "The first update was identical to &ldquo;no baseline&rdquo;."),
+    ("<b>NaN or infinite rewards or screens, empty games, one-step games.</b>", "The update is skipped (nothing changes) or is valid.", "Both networks were identical afterwards; one-step games gave valid updates."),
+    ("<b>Bad settings:</b> an unknown baseline name, a discount of 1 or more, a learning rate of 0.", "Rejected at the start with a message.", "All were rejected."),
+    ("<b>The convolutional extra:</b> one screen or a batch of screens, extreme inputs.", "The network reshapes any input to pictures and returns one probability per screen.", "Both shapes worked; weights x 30 and inputs of hundreds of thousands gave finite numbers; the picture filters themselves received learning."),
+    ("<b>One lucky or unlucky run deciding the answer, and computer threads.</b>", "10 seeds per method on CartPole; 1 thread per run.", "Our first try with 3 seeds gave the opposite answer; the same seed with a different thread count gave a different run."),
+])
+story.append(Paragraph("Tests", H2))
 tests_table([
     ("<b>&ldquo;No baseline&rdquo; is exactly Part 1:</b> one learning step, and 60 games of CartPole training.", "Identical weights and identical training curves.", "Identical in both."),
     ("<b>A baseline must not bend where learning points</b> (made-up problem with a known answer, as in Part 1): no baseline, constant, learned.", "All match the exact gradient.",
@@ -266,7 +307,7 @@ tests_table([
     ("<b>Do baselines help in real training?</b> CartPole, 10 seeds per method; statistical tests of each baseline against none.", "Both better.", "p = 0.018 (learned) and below 0.001 (constant)."),
     ("<b>Does the Pong baseline make learning start sooner?</b>", "Reaches an average of &minus;10 in under 60% of the games.", f"Game {l0['first_game_average_reaches_minus10']} against {n0['first_game_average_reaches_minus10']:,}; game {l1['first_game_average_reaches_minus10']} against {n1['first_game_average_reaches_minus10']:,}."),
 ])
-story.append(Paragraph("<b>Also tested</b> (22 and 26 checks in total): NaN rewards or screens skip the update with both networks untouched; empty and one-step games; an unknown baseline name is rejected; the convolutional network accepts one screen or a batch; extreme inputs. Writing the NaN-screen test also found and fixed a crash in the Pong code.", BODY))
+story.append(Paragraph("All 22 and 26 checks are in test_cartpole_baselines.py and test_pong_baseline.py.", SMALL))
 
 # ======================================================================================================== 3 months (baselines)
 story.append(Paragraph("With 3 more months: baselines", H2))
