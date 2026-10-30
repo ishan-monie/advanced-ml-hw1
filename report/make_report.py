@@ -595,6 +595,10 @@ def pg_part2_three_months_section(story):
                            "changing where learning points. With more time we would measure the same thing during real training, by recording how much "
                            "the learning step varies with and without a baseline, and check there is no hidden bias when the baseline is learned "
                            "from the same games.", BODY))
+    story.append(Paragraph("<b>Explain our surprises.</b> On CartPole the simple constant baseline beat the learned one, and on Pong the learned baseline sped up "
+                           "the start of learning for both seeds but one seed then climbed more slowly than the run without a baseline. We did not investigate either. "
+                           "We would test the guesses we made, for example giving the baseline network several learning steps per game or a lower learning rate, "
+                           "and check whether the baseline network&rsquo;s guesses lag behind the real rewards.", BODY))
     story.append(Paragraph("<b>Try other baselines.</b> We would compare other references: an average over the batch, a learned baseline with a different size or "
                            "learning rate, rescaling the credits, and a baseline that shares its first layers with the policy. We would also tune the "
                            "convolutional network and run it without a baseline, since our one untuned run did worse than the plain network.", BODY))
