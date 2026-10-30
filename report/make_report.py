@@ -41,7 +41,7 @@ def summary_section(story):
     story.append(Paragraph("How to run the code", H1))
     story.append(Paragraph("<b>Step 1.</b> Download the repository (green <i>Code</i> button, then <i>Download ZIP</i>) "
                            "or clone it, and install the Python packages (Python 3.12 was used):", BODY))
-    story.append(Preformatted('pip install numpy matplotlib scipy torch "gymnasium[classic-control]" ale-py', CODE))
+    story.append(Preformatted('pip install -r requirements.txt', CODE))
     story.append(Paragraph("<b>Step 2.</b> Shuttle problem. In the <font face='Courier'>q1_shuttle</font> folder:", BODY))
     story.append(Preformatted("""python run_q1.py     # solves the problem 3 ways and saves the 3 plots in figures/
 python test_q1.py    # the 32 edge-case and correctness checks (PASS/FAIL for each)""", CODE))
