@@ -139,6 +139,9 @@ tests_table([
     ("<b>Simulate</b> the station 3,000 times with the best plan.", "The average cost should match the calculated cost.", "Simulated 575.8 (&plusmn; 1.7), calculated 576.7."),
     ("<b>Bad inputs and loops:</b> negative costs, no arrivals, a discount of 1 or more, NaN numbers, methods that never settle.", "A clear error, never a silent wrong answer.", "All stopped with a message (32 checks in total)."),
 ])
+story.append(Paragraph("With 3 more months: shuttle problem", H2))
+story.append(Paragraph("Everything so far checks that the program solves <i>our model</i>. With more time we would ask whether the model fits a real station: use real arrival data to see if &ldquo;dispatch at 13&rdquo; still holds, "
+                       "add rush hours and several shuttles, and see how far the plan moves if the costs of 100 and 2 are really 50% to 150% of what we assumed. We would also test the methods on hundreds of random problems and against a brute-force search on small ones.", BODY))
 
 # ======================================================================================================== PG part 1: CartPole
 story.append(PageBreak())
@@ -202,6 +205,10 @@ tests_table([
      "99% of its pushes were above 99% certain (and 89% were up), against 70% for the main model; its score was &minus;21."),
     ("<b>7. Protections:</b> a NaN in the screens or rewards, an empty game, same seed twice, game limit hit mid-batch, an extreme network.", "Skipped or valid updates, identical results, no NaN.", "All held (29 checks in total)."),
 ])
+story.append(Paragraph("With 3 more months: CartPole and Pong", H2))
+story.append(Paragraph("Our results depend a lot on luck (CartPole seeds ranged from 155 to 500; shorter Pong runs of two seeds ended far apart). We would run 20 or more seeds per setting with confidence ranges, "
+                       "train Pong for much longer, switch off each of our own choices in turn (credit restart, frame differences, 4 games per update), search learning rate, network size and batch size, and find out why 0.01 froze. "
+                       "We would also test against a faster opponent and tune the convolutional network.", BODY))
 
 # ======================================================================================================== PG part 2
 story.append(PageBreak())
@@ -264,14 +271,9 @@ tests_table([
     ("<b>Protections:</b> NaN rewards or screens, empty and one-step games, an unknown baseline name, the convolutional network on one screen or a batch, extreme inputs.", "Skipped or valid, nothing damaged.", "All held (22 and 26 checks in total). Writing the NaN-screen test also found and fixed a crash in the Pong code."),
 ])
 
-# ======================================================================================================== 3 months
-story.append(Paragraph("With 3 more months: what other validation tests and experiments would we perform?", H1))
-story.append(Paragraph("<b>Shuttle.</b> Everything so far checks that the program solves <i>our model</i>. With more time we would ask whether the model fits a real station: use real arrival data to see if &ldquo;dispatch at 13&rdquo; still holds, "
-                       "add rush hours and several shuttles, and see how far the plan moves if the costs of 100 and 2 are really 50% to 150% of what we assumed. We would also test the methods on hundreds of random problems and against a brute-force search on small ones.", BODY))
-story.append(Paragraph("<b>Policy gradient.</b> Our results depend a lot on luck (CartPole seeds ranged from 155 to 500; shorter Pong runs of two seeds ended far apart). We would run 20 or more seeds per setting with confidence ranges, "
-                       "train Pong for much longer, switch off each of our own choices in turn (credit restarting at each point, frame differences, 4 games per update), search learning rate, network size and batch size properly, and find out why 0.01 froze. "
-                       "We would test the trained player against a faster opponent and from different starts, and tune the convolutional network and run it with several seeds.", BODY))
-story.append(Paragraph("<b>Baselines.</b> We would explain our surprises (the constant baseline beating the learned one on CartPole; one Pong seed climbing more slowly after a fast start), for example by giving the baseline network more learning steps per game "
+# ======================================================================================================== 3 months (baselines)
+story.append(Paragraph("With 3 more months: baselines", H2))
+story.append(Paragraph("We would explain our surprises (the constant baseline beating the learned one on CartPole; one Pong seed climbing more slowly after a fast start), for example by giving the baseline network more learning steps per game "
                        "or a lower learning rate. We would measure the noise of the learning step during real training, not just on a made-up problem, and compare other baselines (batch average, rescaled credits, a baseline sharing layers with the policy).", BODY))
 
 SimpleDocTemplate(os.path.join(HERE, "report.pdf"), pagesize=letter, leftMargin=0.9 * inch, rightMargin=0.9 * inch, topMargin=0.8 * inch, bottomMargin=0.8 * inch,
