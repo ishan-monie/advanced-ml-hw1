@@ -3,7 +3,7 @@
 GitHub user: **ishan-monie**  |  Repository: **advanced-ml-hw1**
 
 Code and report for Assignment 1: a shuttle-dispatch problem solved three ways (enumeration, value iteration, policy iteration), and policy gradient (REINFORCE) on CartPole-v1 and Pong-v5, first without and then with a baseline.
-The report is `report/report.pdf` (built by `report/make_report.py`). It contains the graphs, the edge cases we considered, the tests, and the discussion.
+The submitted report is `report/report.pdf` (10 pages, built by `report/make_report.py`): the graphs, one table of edge cases and tests per part, and the discussion. `report/report_full.pdf` (built by `report/make_report_full.py`) is the long version that lists every check one by one.
 
 ## What is in this repository
 | Folder | Assignment part |
@@ -60,7 +60,7 @@ python test_pong_baseline.py          # the 26 checks (about 7 minutes)
 ```
 (The Pong baseline runs used `--time-budget 32400 --device cuda` on one GPU card, with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.)
 
-**5. Rebuild the report** – in `report/`: `python make_report.py` (writes `report.pdf`; reads the saved results and figures).
+**5. Rebuild the report** – in `report/`: `python make_report.py` (writes `report.pdf`) or `python make_report_full.py` (writes `report_full.pdf`); both read the saved results and figures.
 
 ## Results at a glance
 | Experiment | Result (500 test games unless noted) |
