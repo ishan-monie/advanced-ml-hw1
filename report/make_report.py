@@ -38,26 +38,24 @@ def summary_section(story):
     story.append(Spacer(1, 8))
     story.append(Paragraph("All of the code used for this assignment is in this repository.", BODY))
 
-    story.append(Paragraph("How to run the code", H1))
-    story.append(Paragraph("<b>Step 1.</b> Download the repository (green <i>Code</i> button, then <i>Download ZIP</i>) "
-                           "or clone it, and install the Python packages (Python 3.12 was used):", BODY))
-    story.append(Preformatted('pip install -r requirements.txt', CODE))
-    story.append(Paragraph("<b>Step 2.</b> Shuttle problem. In the <font face='Courier'>q1_shuttle</font> folder:", BODY))
-    story.append(Preformatted("""python run_q1.py     # solves the problem 3 ways and saves the 3 plots in figures/
-python test_q1.py    # the 32 edge-case and correctness checks (PASS/FAIL for each)""", CODE))
-    story.append(Paragraph("<b>Step 3.</b> Policy gradient, no baseline. In the <font face='Courier'>q3_policy_gradient</font> folder:", BODY))
-    story.append(Preformatted("""python run_cartpole.py   # CartPole: trains, plays 500 test games, saves graphs
-python test_cartpole.py  # 24 checks
-python plot_pong.py <3 result folders>   # Pong graphs (folders: see README)
-python test_pong.py      # 29 checks""", CODE))
-    story.append(Paragraph("<b>Step 4.</b> Baselines. In the <font face='Courier'>q4_baselines</font> folder:", BODY))
-    story.append(Preformatted("""python run_cartpole_baselines.py   # CartPole, 3 methods x 10 seeds (20-30 minutes)
-python test_cartpole_baselines.py  # 22 checks
-python plot_pong_baselines.py      # Pong baseline graphs
-python test_pong_baseline.py       # Pong baseline and convolutional checks""", CODE))
-    story.append(Paragraph("Pong training takes hours, so the finished Pong runs are included in the repository. The README lists the exact "
-                           "commands that made them. Runs use fixed random seeds, but a different number of computer threads can change a run "
-                           "(see the CartPole baseline results), so the CartPole baseline runs use 1 thread.", BODY))
+    story.append(Paragraph("What is in the repository", H1))
+    table4(story, ("Folder", "What it holds", "Where the results are"), [
+        ("<font face='Courier'>q1_shuttle/</font>", "Shuttle problem: enumeration, value iteration, policy iteration, with the edge-case checks and a notebook that shows the graphs one by one.",
+         "<font face='Courier'>figures/</font> (the 3 plots)"),
+        ("<font face='Courier'>q3_policy_gradient/</font>", "Policy gradient without a baseline: CartPole-v1 and Pong-v5, with the edge-case checks.",
+         "<font face='Courier'>figures/</font> (graphs); <font face='Courier'>results/</font> (the finished Pong runs and models); the CartPole scores are the <font face='Courier'>.npy</font> files"),
+        ("<font face='Courier'>q4_baselines/</font>", "Policy gradient with baselines: CartPole (constant and learned), Pong (learned), and the extra convolutional Pong network, with the checks.",
+         "<font face='Courier'>figures/</font> (graphs and summaries); <font face='Courier'>results/</font> (every run)"),
+        ("<font face='Courier'>report/</font>", "This report and the script that builds it.", "<font face='Courier'>report.pdf</font>"),
+        ("<font face='Courier'>README.md</font>, <font face='Courier'>requirements.txt</font>", "The repository guide (including how to run everything) and the list of Python packages.", "&ndash;"),
+    ], (1.95, 2.7, 1.85))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("Inside each folder, the files named <font face='Courier'>test_*.py</font> hold the edge-case and correctness checks "
+                           "(the tests described in this report), and the files named <font face='Courier'>run_*.py</font> or "
+                           "<font face='Courier'>plot_*.py</font> make the graphs.", BODY))
+
+    story.append(Paragraph("Pong training takes hours, so the finished Pong runs and their models are included in the repository. "
+                           "The README explains how to run everything.", BODY))
 
 
 CAPTION = ParagraphStyle("caption", parent=BODY, fontSize=9.5, leading=12, alignment=1,
