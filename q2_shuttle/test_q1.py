@@ -259,5 +259,74 @@ check("H8. the exact equation solving used by policy iteration agrees with a slo
       np.allclose(evaluate_policy(costs, probs, policy), slow, atol=1e-6),
       f"largest gap {np.abs(evaluate_policy(costs, probs, policy) - slow).max():.1e}")
 
+# =====================================================================================
+print("\n=== I. HARDER CHECKS (other problems, to see the methods really are right) ===")
+import itertools
+
+
+def solve_all(table_args):
+    """(value iteration, policy iteration) on the current problem."""
+    c, p = shuttle.build_tables()
+    v1, a1, r1 = shuttle.value_iteration(c, p, max_rounds=1_000_000)
+    v2, a2, r2 = shuttle.policy_iteration(c, p)
+    return c, p, v1, a1, r1, v2, a2, r2
+
+
+# I1. brute force: on a tiny problem try every possible plan, the best one must match the methods
+with change(CAPACITY=3, MAX_PEOPLE=8, ARRIVALS=[1, 2, 3], GAMMA=0.9):
+    c, p, v1, a1, r1, v2, a2, r2 = solve_all(None)
+    best = None
+    for bits in itertools.product([0, 1], repeat=9):
+        v = shuttle.evaluate_policy(c, p, np.array(bits))
+        best = v if best is None else np.minimum(best, v)
+    gap_vi, gap_pi = np.abs(best - v1).max(), np.abs(best - v2).max()
+check("I1. brute force on a tiny problem: the cheapest of all 512 possible plans costs the same as the plan the methods find",
+      gap_vi < 1e-8 and gap_pi < 1e-8, f"largest gap {gap_vi:.1e} (value iteration), {gap_pi:.1e} (policy iteration)")
+
+# I2. many random problems
+rrng = np.random.default_rng(0)
+worst_vp, worst_enum, disagree, clear_total = 0.0, 0.0, 0, 0
+for _ in range(300):
+    cap, maxp = int(rrng.integers(1, 12)), int(rrng.integers(12, 45))
+    arr = sorted(rrng.choice(range(0, 9), size=int(rrng.integers(1, 5)), replace=False).tolist())
+    g, cf, ch = float(rrng.uniform(0.3, 0.97)), float(rrng.uniform(0, 300)), float(rrng.uniform(0, 8))
+    with change(CAPACITY=cap, MAX_PEOPLE=maxp, ARRIVALS=arr, GAMMA=g, DISPATCH_COST=cf, WAIT_COST=ch):
+        c, p, v1, a1, r1, v2, a2, r2 = solve_all(None)
+        enum0 = shuttle.enumeration(c, p, 400)[0]
+    scale = max(1.0, np.abs(v1).max())
+    worst_vp = max(worst_vp, np.abs(v1 - v2).max() / scale)
+    worst_enum = max(worst_enum, np.abs(enum0 - v1).max() / scale)
+    qw, qd = c[0] + g * p[0] @ v1, c[1] + g * p[1] @ v1
+    clear = np.abs(qw - qd) > 1e-6                       # ignore situations where both actions cost (almost) the same
+    disagree += int((a1[clear] != a2[clear]).sum()); clear_total += int(clear.sum())
+check("I2. 300 random problems (random shuttle size, station size, arrivals, discount, prices): all three methods agree",
+      worst_vp < 1e-8 and worst_enum < 1e-4 and disagree == 0,
+      f"value vs policy iteration within {worst_vp:.0e}; enumeration (400 periods) within {worst_enum:.0e}; "
+      f"{disagree} action disagreements in {clear_total} clear-cut situations")
+
+# I3. a discount close to 1
+rows = []
+for g in (0.9, 0.99, 0.999):
+    with change(GAMMA=g):
+        c, p, v1, a1, r1, v2, a2, r2 = solve_all(None)
+    rows.append((g, r1, r2, np.array_equal(a1, a2), np.abs(v1 - v2).max()))
+check("I3. a discount close to 1 (0.9, 0.99, 0.999): value iteration needs far more rounds, policy iteration hardly more, and both find the same plan",
+      all(r[3] for r in rows) and rows[0][1] < rows[1][1] < rows[2][1] and rows[2][2] <= 10 and all(r[4] < 1e-6 for r in rows),
+      "; ".join(f"{g}: {r1} rounds vs {r2}" for g, r1, r2, _, _ in rows))
+
+# I4. value iteration stops with an error no bigger than theory allows
+bound = 1e-10 * GAMMA / (1 - GAMMA)
+real_gap = np.abs(values - evaluate_policy(costs, probs, policy)).max()
+check("I4. the leftover error of value iteration is within the bound the stopping rule guarantees (tolerance x discount / (1 - discount))",
+      real_gap <= bound, f"real error {real_gap:.2e}, bound {bound:.2e}")
+
+# I5. a shuttle bigger than the whole station
+with change(CAPACITY=250):
+    c, p, v1, a1, r1, v2, a2, r2 = solve_all(None)
+    empties = np.allclose(c[1], DISPATCH_COST) and np.all(np.argmax(p[1], axis=1) <= max(ARRIVALS))
+check("I5. a shuttle bigger than the station (250 against 200): every dispatch empties the station, and the methods still agree",
+      empties and np.array_equal(a1, a2) and np.abs(v1 - v2).max() < 1e-8,
+      f"dispatch from {first_dispatch(a1)} people; every dispatch costs exactly {DISPATCH_COST}")
+
 print(f"\n{sum(results)} of {len(results)} checks passed")
 raise SystemExit(0 if all(results) else 1)

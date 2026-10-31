@@ -27,7 +27,7 @@ A GPU is not needed. The long Pong trainings simply take many hours on a CPU, so
 **1. Shuttle problem** – in `q2_shuttle/`:
 ```
 python run_q1.py     # solves the problem 3 ways and saves the 3 plots into figures/
-python test_q1.py    # the 32 edge-case / correctness checks
+python test_q1.py    # the 37 edge-case / correctness checks
 ```
 Or open `shuttle_walkthrough.ipynb` to see the graphs one by one with a short description of each part.
 
