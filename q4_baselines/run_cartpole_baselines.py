@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # Graph 2: histogram of the 500 test games (main model)
     plt.figure(figsize=(6, 4))
-    plt.hist(eval_r, bins=30, color="C0", edgecolor="w")
+    plt.hist(eval_r, bins=np.arange(eval_r.min() - 0.5, eval_r.max() + 1.5, 1), color="C0", edgecolor="w")   # one bin per whole score
     plt.axvline(eval_r.mean(), color="C3", ls="--", label=f"mean {eval_r.mean():.1f}, std {eval_r.std():.1f}")
     plt.xlabel("total reward in the game"); plt.ylabel("number of games (out of 500)")
     plt.title("CartPole-v1 with the learned baseline: 500 test games"); plt.legend(); plt.tight_layout()

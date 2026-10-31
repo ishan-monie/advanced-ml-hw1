@@ -35,7 +35,7 @@ plt.savefig(f"{out}/cartpole_training.png", dpi=150); plt.close()
 
 # Graph 2: histogram of the 500 evaluation games
 plt.figure(figsize=(6, 4))
-plt.hist(eval_scores, bins=30, color="C0", edgecolor="w")
+plt.hist(eval_scores, bins=np.arange(eval_scores.min() - 0.5, eval_scores.max() + 1.5, 1), color="C0", edgecolor="w")   # one bin per whole score
 plt.axvline(eval_scores.mean(), color="C3", ls="--", label=f"mean {eval_scores.mean():.1f}, std {eval_scores.std():.1f}")
 plt.xlabel("total reward in the game"); plt.ylabel("number of games (out of 500)")
 plt.title("CartPole-v1: 500 games with the trained policy"); plt.legend(); plt.tight_layout()

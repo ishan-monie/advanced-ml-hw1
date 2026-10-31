@@ -65,7 +65,7 @@ def figs(items, width=3.1):
 
 
 def tests_table(rows):
-    table(("Edge case or test", "What we expected", "What happened"), rows, (2.35, 2.05, 2.1))
+    table(("Test", "What we expected", "What happened"), rows, (2.35, 2.05, 2.1))
 
 
 def edge_table(rows):
