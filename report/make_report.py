@@ -264,8 +264,8 @@ table(("Method", f"Average test score ({len(seeds)} seeds)", "Worst and best see
       [(n, f"{cm(b, 'mean').mean():.1f}", f"{cm(b, 'mean').min():.0f} to {cm(b, 'mean').max():.0f}", f"{int((cm(b, 'mean') >= 499.5).sum())} of {len(seeds)}")
        for b, n in (("none", "No baseline"), ("constant", "Constant baseline"), ("learned", "Learned baseline"))], (2.0, 1.7, 1.5, 1.3))
 story.append(Paragraph("<b>Both baselines help:</b> the constant one scored 482 against 155 with none (p &lt; 0.001) and the learned one 331 (p = 0.018). The main model (learned, seed 0) scored only "
-                       f"{CB['learned_seed0']['mean']:.1f}, below its method&rsquo;s average; we report it because we chose it in advance. <b>A surprise:</b> we expected the learned baseline to beat the constant one, "
-                       "but the constant one was better (p = 0.015). We did not investigate why. All CartPole results use 1 computer thread: the same seed with a different thread count can give a completely different run.", BODY))
+                       f"{CB['learned_seed0']['mean']:.1f}, below its method&rsquo;s average (it fell back in the last 50 training games, Figure 10); we report it because we chose it in advance. <b>A surprise:</b> we expected the learned baseline to beat the constant one, "
+                       "but the constant one scored higher (p = 0.015 on one test, 0.063 on another: weak evidence). We did not investigate why. All CartPole runs use 1 computer thread (another thread count can change a run).", BODY))
 
 PB = json.load(open(os.path.join(Q4, "pong_baseline_summary.json")))
 n0, n1, l0, l1, cv = (PB["no baseline, seed 0"], PB["no baseline, seed 1"], PB["learned baseline, seed 0 (main)"], PB["learned baseline, seed 1"], PB["convolutional + learned baseline, seed 0"])
