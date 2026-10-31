@@ -130,8 +130,8 @@ edge_table([
     ("Fewer people than a shuttle holds, or an empty station.", "Dispatching takes everybody who is waiting (up to 15). With nobody waiting we allow dispatching, but it should never be chosen.", "0 people: the best action is to wait. 4 people: dispatch costs 100 and the next state is 1 to 5 people."),
     ("Exactly 15 and 16 people: A full shuttle versus one person left behind.", "The waiting cost is charged on the people left after the shuttle goes.", "15 people: cost 100, next state 1 to 5. 16 people: cost 102, next state 2 to 6."),
     ("A full station: The 200-person limit, and the people who would arrive above it.", "Extra arrivals are turned away; the transition table is built with the limit built in.", "From 198: 20% go to 199 and 80% to 200. With a limit of 300 the best actions are the same (largest cost difference 9.4e-11)."),
-    ("Off-by-one errors: 0 to 200 people is 201 situations.", "Every table and plot has 201 entries.", "Tables have shape (2, 201, 201); each plot has 201 points."),
-    ("Bad inputs: negative costs, no arrivals, a discount of 1 or more, NaN or infinite numbers, a damaged probability table.", "Rejected with a clear message, or the calculation stops; nothing is allowed to spread silently.", "All were rejected or stopped (checked for each of the three methods)."),
+    ("Ties and rounding noise: two actions with the same cost can make policy iteration loop or value iteration flip-flop.", "An action is changed only if the new one is better by more than 1e-9, and dispatch is chosen only if it is strictly cheaper.", "Policy iteration started from &ldquo;always dispatch&rdquo; still found the same best plan; a problem where every action ties stopped after 1 round."),
+    ("Stopping too early or solving inexactly: value iteration cut short, policy iteration approximated.", "Value iteration stops only when no value changes by more than 1e-10; policy iteration solves its equations exactly.", "Value iteration from all 0, all 1000 and random starting values agreed to 4e-9; the exact solve matched a slow repeat-until-settled calculation to 9e-13."),
     ("Methods that never settle: value iteration that cannot converge; policy iteration that cycles on exact ties.", "A limit on the number of rounds (it stops with an error); policy iteration keeps its action on ties.", "Forced to fail, both stop with an error. A problem where every action ties stops after 1 round."),
 ])
 story.append(Paragraph("Tests", H2))
@@ -173,8 +173,8 @@ story.append(Paragraph("The network clearly learns (games last about 20 steps at
 story.append(Paragraph("Edge cases", H2))
 edge_table([
     ("The pole falls at once (a game of one step), and the 500-step limit.", "A one-step game still gives a valid update. We use CartPole-v1, whose limit is 500, not v0, whose limit is 200.", "A one-step game changes the network with finite numbers; every score is between 1 and 500 (the 500 test games ranged from 128 to 192)."),
-    ("Credits growing without limit: a discount of 1 or more.", "Rejected at the start.", "With discount 0.95 no credit can exceed 1/(1-0.95) = 20; the largest in a 500-step game was 20.000."),
-    ("NaN or infinite numbers, and an empty game.", "The update is skipped and the network is left untouched.", "Weights were identical before and after; an empty game did not crash."),
+    ("Credits growing without limit in a long game.", "The discount must be below 1, so credits are capped: with 0.95 no credit can exceed 1/(1-0.95) = 20.", "The largest credit in a 500-step game was 20.000."),
+    ("Test games changing the network by accident.", "Test games run with learning switched off, and the network is not updated during them.", "Weights were identical before and after the test games, and no learning information was kept."),
     ("Log of a probability of 0, and huge numbers.", "Probabilities are built from raw scores (logits), so they are never exactly 0.", "An extreme network (weights x 10,000) and extreme inputs still gave finite log-probabilities."),
     ("Results that cannot be repeated.", "Seeds are fixed, and the test games use a different seed from training.", "The same seed gave an identical training curve; a different seed a different one."),
 ])
@@ -215,7 +215,7 @@ story.append(Paragraph("Edge cases", H2))
 edge_table([
     ("The first screen of a game has no screen before it.", "The network is shown all zeros for that step.", "The first input was all zeros; later inputs showed both +1 and &minus;1 (motion)."),
     ("Wrong buttons: The game has 6 actions; we use only 2 and 3.", "Only up (2) and down (3) can be chosen.", "The game confirms that buttons 2 and 3 are RIGHT and LEFT."),
-    ("The cleaning function changes the picture it is given.", "We always give it a copy.", "The game&rsquo;s own picture was unchanged afterwards."),
+    ("Test games changing the network by accident.", "Test games run with learning switched off.", "Weights were identical before and after test games, and the same seed gave identical test scores."),
     ("Credit leaking across points (a loss blamed on pushes from an earlier point).", "The running total restarts at every point scored.", "See test 1: hand-worked credits, and what would happen without the restart."),
     ("NaN or infinite numbers in the screens or rewards, and an empty game.", "The update is skipped before the network is used.", "Weights were identical afterwards. Writing this test found a crash with NaN screens in our first version; it was fixed."),
     ("Long games and the time limit: A game takes about 1,000 steps, and a run can stop in the middle of a batch.", "Games are kept as light as possible; games already played when the limit hits are still learned from.", "One game used about 24 MB, so a batch of 4 is easy to hold; a run stopped after 1 game of a batch of 4 still changed the network."),
@@ -289,8 +289,8 @@ story.append(Paragraph("Edge cases", H2))
 edge_table([
     ("A baseline that depends on the push it judges would bend the direction of learning.", "The constant baseline uses earlier games only; the learned baseline carries no learning information into the policy&rsquo;s step.", "A check on the learned baseline&rsquo;s use found none; see the tests for a baseline that peeks, which is caught."),
     ("The first games: nothing to average yet for the constant baseline.", "It starts at 0, so the first update equals Part 1&rsquo;s.", "The first update was identical to &ldquo;no baseline&rdquo;."),
-    ("NaN or infinite rewards or screens, empty games, one-step games.", "The update is skipped (nothing changes) or is valid.", "Both networks were identical afterwards; one-step games gave valid updates."),
-    ("Bad settings: an unknown baseline name, a discount of 1 or more, a learning rate of 0.", "Rejected at the start with a message.", "All were rejected."),
+    ("The new code accidentally changing Part 1.", "&ldquo;No baseline&rdquo; subtracts a reference of exactly 0, so it is Part 1 under another name.", "One learning step gave identical weights, and 60 games of CartPole training gave identical curves."),
+    ("A bad number reaching the baseline network (NaN or infinite rewards, or NaN inside a game&rsquo;s states).", "The whole update is skipped, so neither network changes.", "Both kinds of bad input left every weight of both networks identical."),
     ("The convolutional extra: one screen or a batch of screens, extreme inputs.", "The network reshapes any input to pictures and returns one probability per screen.", "Both shapes worked; weights x 30 and inputs of hundreds of thousands gave finite numbers; the picture filters themselves received learning."),
     ("One lucky or unlucky run deciding the answer, and computer threads.", "10 seeds per method on CartPole; 1 thread per run.", "Our first try with 3 seeds gave the opposite answer; the same seed with a different thread count gave a different run."),
 ])
