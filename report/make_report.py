@@ -264,8 +264,8 @@ table(("Method", f"Average test score ({len(seeds)} seeds)", "Worst and best see
       [(n, f"{cm(b, 'mean').mean():.1f}", f"{cm(b, 'mean').min():.0f} to {cm(b, 'mean').max():.0f}", f"{int((cm(b, 'mean') >= 499.5).sum())} of {len(seeds)}")
        for b, n in (("none", "No baseline"), ("constant", "Constant baseline"), ("learned", "Learned baseline"))], (2.0, 1.7, 1.5, 1.3))
 story.append(Paragraph("Both baselines help: the constant one scored 482 against 155 with none (p &lt; 0.001) and the learned one 331 (p = 0.018). The main model (learned, seed 0) scored only "
-                       f"{CB['learned_seed0']['mean']:.1f}, below its method&rsquo;s average (it fell back in the last 50 training games, Figure 10); we report it because we chose it in advance. A surprise: we expected the learned baseline to beat the constant one, "
-                       "but the constant one scored higher (p = 0.015 on one test, 0.063 on another: weak evidence). We did not investigate why. All CartPole runs use 1 computer thread (another thread count can change a run).", BODY))
+                       f"{CB['learned_seed0']['mean']:.1f}, below its method&rsquo;s average (it fell back in the last 50 training games, Figure 10); we report it because we chose it in advance. We expected the learned baseline to beat the constant one, "
+                       "but the constant one scored higher (p = 0.015 on one test, 0.063 on another: weak evidence), and we don&rsquo;t know why yet. All CartPole runs use 1 computer thread (another thread count can change a run).", BODY))
 
 PB = json.load(open(os.path.join(Q4, "pong_baseline_summary.json")))
 n0, n1, l0, l1, cv = (PB["no baseline, seed 0"], PB["no baseline, seed 1"], PB["learned baseline, seed 0 (main)"], PB["learned baseline, seed 1"], PB["convolutional + learned baseline, seed 0"])
@@ -282,10 +282,9 @@ story.append(Paragraph(f"The baseline makes learning start about 2.5 times soone
                        f"against {n0['first_game_average_reaches_minus10']:,} and {n1['first_game_average_reaches_minus10']:,}), for both seeds. Final scores are mixed: the main model is the best player we trained "
                        f"({l0['mean']:.2f} against {n0['mean']:.2f} for the same seed without a baseline, very unlikely to be luck), but seed 1 ended lower ({l1['mean']:.2f} against {n1['mean']:.2f}), with fewer games. "
                        "With two seeds we can say the baseline speeds up the start of learning, not that it always gives a better final player.", BODY))
-story.append(Paragraph("Extra: a convolutional network for Pong", H2))
-story.append(Paragraph(f"We also tried a network whose first layer is small picture filters (so a ball is recognised wherever it is), with the learned baseline, as a separate extra (one seed, untuned, {cv['games']:,} games). "
+story.append(Paragraph(f"As an extra, we also tried a network whose first layer is small picture filters (so a ball is recognised wherever it is), with the learned baseline (one seed, untuned, {cv['games']:,} games). "
                        f"It took off earlier than no baseline at all but then levelled off near zero: test score {cv['mean']:.2f} &plusmn; {cv['std']:.2f}, against {l0['mean']:.2f} for the plain network. "
-                       "It did not help in our setup; this is not a fair verdict on convolutional networks (no tuning, one seed, no run without a baseline).", BODY))
+                       "It did not help here, but with one seed and no tuning this says little about convolutional networks in general.", BODY))
 story.append(Paragraph("Edge cases", H2))
 edge_table([
     ("A baseline that depends on the push it judges would bend the direction of learning.", "The constant baseline uses earlier games only; the learned baseline carries no learning information into the policy&rsquo;s step.", "A check on the learned baseline&rsquo;s use found none; see the tests for a baseline that peeks, which is caught."),
