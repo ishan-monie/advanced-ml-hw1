@@ -3,7 +3,7 @@
 GitHub user: **ishan-monie**  |  Repository: **advanced-ml-hw1**
 
 Code and report for Assignment 1: a shuttle-dispatch problem solved three ways (enumeration, value iteration, policy iteration), and policy gradient (REINFORCE) on CartPole-v1 and Pong-v5, first without and then with a baseline.
-The submitted report is `report/report.pdf` (10 pages, built by `report/make_report.py`): the graphs, one table of edge cases and tests per part, and the discussion. `report/report_full.pdf` (built by `report/make_report_full.py`) is the long version that lists every check one by one.
+The submitted report is `report/report.pdf` (12 pages): the graphs, the edge-case and test tables for each part, and the discussion.
 
 ## What is in this repository
 | Folder | Assignment part |
@@ -11,7 +11,7 @@ The submitted report is `report/report.pdf` (10 pages, built by `report/make_rep
 | `q2_shuttle/` | Question 2: the shuttle problem (enumeration, value iteration, policy iteration) |
 | `q3_policy_gradient/` | Question 3, Part 1: policy gradient on CartPole-v1 and Pong-v5, no baseline |
 | `q4_baselines/` | Question 3, Part 2: the same with baselines (CartPole: constant and learned; Pong: learned; plus an extra convolutional Pong network) |
-| `report/` | the PDF report and the script that builds it |
+| `report/` | the PDF report |
 
 Every folder has `run_*` / `plot_*` scripts that make the graphs (saved in its `figures/` folder) and `test_*.py` files with the edge-case and correctness checks. Each check prints PASS or FAIL and the evidence.
 
@@ -59,8 +59,6 @@ python plot_pong_baselines.py         # the Pong baseline graphs and summary
 python test_pong_baseline.py          # the 26 checks (about 7 minutes)
 ```
 (The Pong baseline runs used `--time-budget 32400 --device cuda` on one GPU card, with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.)
-
-**5. Rebuild the report** – in `report/`: `python make_report.py` (writes `report.pdf`) or `python make_report_full.py` (writes `report_full.pdf`); both read the saved results and figures.
 
 ## Results at a glance
 | Experiment | Result (500 test games unless noted) |

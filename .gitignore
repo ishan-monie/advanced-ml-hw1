@@ -10,3 +10,8 @@ q3_policy_gradient/results/*
 !q3_policy_gradient/results/pong_lr0.01_seed0/
 !q3_policy_gradient/results/**/*.pt
 !q4_baselines/results/pong_*/model.pt
+
+# report build scripts and the long version are kept locally only
+report/make_report.py
+report/make_report_full.py
+report/report_full.pdf
