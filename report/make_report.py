@@ -14,7 +14,7 @@ from PIL import Image as PILImage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
-Q1, Q3, Q4 = (os.path.join(ROOT, d, "figures") for d in ("q1_shuttle", "q3_policy_gradient", "q4_baselines"))
+Q1, Q3, Q4 = (os.path.join(ROOT, d, "figures") for d in ("q2_shuttle", "q3_policy_gradient", "q4_baselines"))
 ss = getSampleStyleSheet()
 BODY = ParagraphStyle("body", parent=ss["BodyText"], fontSize=10.5, leading=14, spaceAfter=6)
 TITLE = ParagraphStyle("title", parent=ss["Title"], fontSize=18, spaceAfter=10)
@@ -86,7 +86,7 @@ story.append(Paragraph("How to run the code", H1))
 story.append(Paragraph("1. Install the packages: " + C("pip install -r requirements.txt") + ". 2. Open a terminal in the folder of the part you want and run the commands below. "
                        "Every " + C("test_*.py") + " prints PASS or FAIL for each check, with the evidence.", BODY))
 table(("Part (folder)", "Make the graphs", "Run the tests"), [
-    ("Shuttle (" + C("q1_shuttle") + ")", C("python run_q1.py"), C("python test_q1.py")),
+    ("Shuttle (" + C("q2_shuttle") + ")", C("python run_q1.py"), C("python test_q1.py")),
     ("CartPole (" + C("q3_policy_gradient") + ")", C("python run_cartpole.py"), C("python test_cartpole.py")),
     ("Pong (" + C("q3_policy_gradient") + ")", C("python plot_pong.py &lt;3 result folders&gt;"), C("python test_pong.py")),
     ("CartPole baselines (" + C("q4_baselines") + ")", C("python run_cartpole_baselines.py") + " (20-30 min)", C("python test_cartpole_baselines.py")),
@@ -97,7 +97,7 @@ story.append(Paragraph("Pong training takes many hours, so the finished Pong run
 
 story.append(Paragraph("What is in the repository", H1))
 table(("Folder", "What it holds"), [
-    (C("q1_shuttle/"), "Shuttle problem: enumeration, value iteration, policy iteration; the 3 plots (" + C("figures/") + "); a notebook that shows them one by one."),
+    (C("q2_shuttle/"), "Shuttle problem: enumeration, value iteration, policy iteration; the 3 plots (" + C("figures/") + "); a notebook that shows them one by one."),
     (C("q3_policy_gradient/"), "Policy gradient without a baseline for CartPole and Pong; graphs in " + C("figures/") + ", finished Pong runs in " + C("results/") + "."),
     (C("q4_baselines/"), "The same with baselines (CartPole: constant and learned; Pong: learned) and an extra convolutional Pong network; graphs in " + C("figures/") + ", every run in " + C("results/") + "."),
     (C("report/"), "This report (" + C("report.pdf") + ") and the script that builds it. " + C("report_full.pdf") + " is the long version that lists every check."),

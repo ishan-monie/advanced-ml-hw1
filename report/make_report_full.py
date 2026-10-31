@@ -40,7 +40,7 @@ def summary_section(story):
 
     story.append(Paragraph("What is in the repository", H1))
     table4(story, ("Folder", "What it holds", "Where the results are"), [
-        ("<font face='Courier'>q1_shuttle/</font>", "Shuttle problem: enumeration, value iteration, policy iteration, with the edge-case checks and a notebook that shows the graphs one by one.",
+        ("<font face='Courier'>q2_shuttle/</font>", "Shuttle problem: enumeration, value iteration, policy iteration, with the edge-case checks and a notebook that shows the graphs one by one.",
          "<font face='Courier'>figures/</font> (the 3 plots)"),
         ("<font face='Courier'>q3_policy_gradient/</font>", "Policy gradient without a baseline: CartPole-v1 and Pong-v5, with the edge-case checks.",
          "<font face='Courier'>figures/</font> (graphs); <font face='Courier'>results/</font> (the finished Pong runs and models); the CartPole scores are the <font face='Courier'>.npy</font> files"),
@@ -60,7 +60,7 @@ def summary_section(story):
 
 CAPTION = ParagraphStyle("caption", parent=BODY, fontSize=9.5, leading=12, alignment=1,
                          textColor=colors.HexColor("#444444"), spaceAfter=12)
-FIG_DIR = os.path.join(HERE, "..", "q1_shuttle", "figures")
+FIG_DIR = os.path.join(HERE, "..", "q2_shuttle", "figures")
 
 
 def figure(story, filename, caption, width=3.2 * inch):

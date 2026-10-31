@@ -8,7 +8,7 @@ The submitted report is `report/report.pdf` (10 pages, built by `report/make_rep
 ## What is in this repository
 | Folder | Assignment part |
 |---|---|
-| `q1_shuttle/` | Question 2: the shuttle problem (enumeration, value iteration, policy iteration) |
+| `q2_shuttle/` | Question 2: the shuttle problem (enumeration, value iteration, policy iteration) |
 | `q3_policy_gradient/` | Question 3, Part 1: policy gradient on CartPole-v1 and Pong-v5, no baseline |
 | `q4_baselines/` | Question 3, Part 2: the same with baselines (CartPole: constant and learned; Pong: learned; plus an extra convolutional Pong network) |
 | `report/` | the PDF report and the script that builds it |
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 A GPU is not needed. The long Pong trainings simply take many hours on a CPU, so the finished Pong runs are included in the repository.
 
 ## How to run
-**1. Shuttle problem** – in `q1_shuttle/`:
+**1. Shuttle problem** – in `q2_shuttle/`:
 ```
 python run_q1.py     # solves the problem 3 ways and saves the 3 plots into figures/
 python test_q1.py    # the 32 edge-case / correctness checks
@@ -79,7 +79,7 @@ python test_pong_baseline.py          # the 26 checks (about 7 minutes)
 - Trained models saved on a GPU are loaded onto the CPU by the tests (`map_location="cpu"`).
 
 ## What the main files do
-- `q1_shuttle/shuttle.py` – the problem and the three methods; `run_q1.py` makes the plots; `test_q1.py` has the checks.
+- `q2_shuttle/shuttle.py` – the problem and the three methods; `run_q1.py` makes the plots; `test_q1.py` has the checks.
 - `q3_policy_gradient/cartpole_pg.py`, `pong_pg.py` – the network, training loop and test games for each game (basic policy gradient).
 - `q3_policy_gradient/run_cartpole.py`, `plot_pong.py` – make the graphs; `test_cartpole.py`, `test_pong.py` – the checks.
 - `q4_baselines/cartpole_baseline.py`, `pong_baseline.py` – the same methods with a baseline (`--network conv` for the convolutional extra).
